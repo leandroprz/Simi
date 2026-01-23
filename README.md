@@ -1,4 +1,17 @@
-# Simi
+# Simi - Archivos de idioma
 Cambiá el idioma de Adobe sin reinstalar los programas.
 
-Esta herramienta nace a partir de la necesidad de cambiar rápidamente los idiomas de los diferentes programas de Adobe sin tener que reinstalarlos. Hace un tiempo hice un tutorial donde expliqué cómo cambiar los idiomas editando unos archivos de texto, pero era un poco engorroso y sobre todo molesto si son como yo, que necesitan cambiar constantemente el idioma de inglés a español o viceversa.
+Esta rama contiene **únicamente los archivos de idioma** del proyecto.
+
+## Contenido
+- `/locales`: paquetes de idioma
+
+## Importante
+- Esta rama **no es para desarrollo**
+- No contiene binarios ni código fuente
+- Para el proyecto completo, usar la rama `main`
+
+## Propósito
+Esta rama existe para:
+- Mantener los paquetes de idioma aislados del código
+- Evitar archivos grandes innecesarios
