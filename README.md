@@ -1,6 +1,4 @@
 # Simi - Archivos de idioma
-Cambiá el idioma de Adobe sin reinstalar los programas.
-
 Esta rama contiene **únicamente los archivos de idioma** del proyecto.
 
 ## Contenido
@@ -9,7 +7,7 @@ Esta rama contiene **únicamente los archivos de idioma** del proyecto.
 ## Importante
 - Esta rama **no es para desarrollo**
 - No contiene binarios ni código fuente
-- Para el proyecto completo, usar la rama `main`
+- Para el proyecto completo usar la rama `main`
 
 ## Propósito
 Esta rama existe para:
