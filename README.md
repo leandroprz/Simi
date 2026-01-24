@@ -10,7 +10,7 @@ La rama `archive-powershell` existe únicamente como archivo histórico ya que S
 
 - No se debe desarrollar en esta rama
 - No se deben abrir pull requests hacia `main`
-- No se garantiza compatibilidad ni soporte
+- No se ofrece compatibilidad ni soporte
 - No se aceptan cambios salvo por razones históricas
 
 ## Ramas activas del proyecto
