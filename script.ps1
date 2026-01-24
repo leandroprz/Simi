@@ -1,4 +1,4 @@
-﻿# Simi v1.9
+﻿# Simi v2.0
 # Cambiá el idioma de los programas de Adobe sin reinstalarlos
 # https://leandroperez.art/tienda/productos-gratuitos/simi-cambia-idioma-adobe-sin-reinstalar/
 # © Leandro Pérez
@@ -7,7 +7,7 @@
 #Requires -Version 5.1
 
 # Variables GitHub
-$script:VersionActualSimi = "1.9"
+$script:VersionActualSimi = "2.0"
 $script:NombreRelease = "Simi_Leandro_Perez_v"
 $script:UltimaVersionTxt
 
@@ -65,6 +65,8 @@ $script:UsandoUltimaVersion = "`n Ya tenés la última versión"
 $script:MensajeResenia = "`n`n Gracias por usar Simi.`n ¡No olvides dejarnos una reseña en www.leandroperez.art!`n"
 $script:MensajeUrlAyuda = "`n Gracias por usar Simi.`n En breve se abrirá la página de ayuda."
 $script:UrlAyudaTienda = "https://leandroperez.art/tienda/productos-gratuitos/simi-cambia-idioma-adobe-sin-reinstalar/"
+$script:MensajeRepError = "`n Gracias por usar Simi.`n En breve se abrirá la página para reportar un error."
+$script:UrlReportarError = "https://leandroperez.art/contacto/?tu-motivo=Otro"
 
 # Fix for $PSScriptRoot when converting to exe (https://stackoverflow.com/a/60122064/5204005)
 $script:ScriptDir = if (-not $PSScriptRoot) {
@@ -79,7 +81,7 @@ function Limpia-Pantalla {
 }
 
 # Menú con opciones
-function Menu ($MenuNumero, $MenuCierra, $NombreMenu, $NombreFuncionMenu, $OpcionMenu1, $MenuFuncion1, $OpcionMenu2, $MenuFuncion2, $OpcionMenu3, $MenuFuncion3, $OpcionMenu4, $MenuFuncion4, $OpcionMenu5, $MenuFuncion5, $OpcionMenu6, $MenuFuncion6, $OpcionMenu7, $MenuFuncion7, $OpcionMenu8, $MenuFuncion8, $OpcionMenu9, $MenuFuncion9, $OpcionMenu10, $MenuFuncion10, $OpcionMenu11, $MenuFuncion11, $OpcionMenu12, $MenuFuncion12, $OpcionMenu13, $MenuFuncion13) {
+function Menu ($MenuNumero, $MenuCierra, $NombreMenu, $NombreFuncionMenu, $OpcionMenu1, $MenuFuncion1, $OpcionMenu2, $MenuFuncion2, $OpcionMenu3, $MenuFuncion3, $OpcionMenu4, $MenuFuncion4, $OpcionMenu5, $MenuFuncion5, $OpcionMenu6, $MenuFuncion6, $OpcionMenu7, $MenuFuncion7, $OpcionMenu8, $MenuFuncion8, $OpcionMenu9, $MenuFuncion9, $OpcionMenu10, $MenuFuncion10, $OpcionMenu11, $MenuFuncion11, $OpcionMenu12, $MenuFuncion12, $OpcionMenu13, $MenuFuncion13, $OpcionMenu14, $MenuFuncion14) {
 
     Write-Host $SimiDesc -Fore DarkGray
     Write-Host "`n$NombreMenu`n" -Fore Gray
@@ -97,6 +99,7 @@ function Menu ($MenuNumero, $MenuCierra, $NombreMenu, $NombreFuncionMenu, $Opcio
     if ($OpcionMenu11 -ne $null) { Write-Host " $OpcionMenu11" -Fore Gray }
     if ($OpcionMenu12 -ne $null) { Write-Host " $OpcionMenu12" -Fore Gray }
     if ($OpcionMenu13 -ne $null) { Write-Host " $OpcionMenu13" -Fore Gray }
+    if ($OpcionMenu14 -ne $null) { Write-Host " $OpcionMenu14" -Fore Gray }
     
     [int]$OpcionMenu = Read-Host -Prompt "`n Tipeá una opción y presioná Enter"
     # Clear-Host
@@ -120,47 +123,53 @@ function Menu ($MenuNumero, $MenuCierra, $NombreMenu, $NombreFuncionMenu, $Opcio
         if ( $OpcionMenu -eq ($MenuNumero + "10") ) { Invoke-Expression $MenuFuncion11 }
         if ( $OpcionMenu -eq ($MenuNumero + "11") ) { Invoke-Expression $MenuFuncion12 }
         if ( $OpcionMenu -eq ($MenuNumero + "12") ) { Invoke-Expression $MenuFuncion13 }
+        if ( $OpcionMenu -eq ($MenuNumero + "13") ) { Invoke-Expression $MenuFuncion14 }
     }
 }
 
 # Menú principal, muestra idiomas
 function MENU_PRINCIPAL {
-    Menu 1 5 "`n Menú principal`n --------------" MENU_PRINCIPAL `
+    Menu 1 6 "`n Menú principal`n --------------" MENU_PRINCIPAL `
         "[1] Cambiar de inglés a español" MENU_ENG_A_SPA_PRINCIPAL `
         "[2] Cambiar de español a inglés" MENU_SPA_A_ENG_PRINCIPAL `
         "[3] Buscar nueva versión de Simi" MENU_UPDATE `
-        "[4] Salir" MENU_SALIR `
-        "[5] Ayuda" MENU_AYUDA
+        "[4] Ayuda" MENU_AYUDA `
+        "[5] Reportar un error" MENU_REPORTAR_ERROR `
+        "[6] Salir" MENU_SALIR
 }
 
 # Menú inglés a español
 function MENU_ENG_A_SPA_PRINCIPAL {
-    Menu 1 10 "`n Cambiar de inglés a español`n ---------------------------" MENU_ENG_A_SPA_PRINCIPAL `
-        " [1] Adobe 2024" MENU_ADOBE_ENG_A_SPA `
-        " [2] Adobe 2023" MENU_ADOBE_ENG_A_SPA `
-        " [3] Adobe 2022" MENU_ADOBE_ENG_A_SPA `
-        " [4] Adobe 2021" MENU_ADOBE_ENG_A_SPA `
-        " [5] Adobe 2020" MENU_ADOBE_ENG_A_SPA `
-        " [6] Adobe 2019" MENU_ADOBE_ENG_A_SPA `
-        " [7] Adobe 2018" MENU_ADOBE_ENG_A_SPA `
-        " [8] Menú principal" MENU_PRINCIPAL `
-        " [9] Salir" MENU_SALIR `
-        "[10] Ayuda" MENU_AYUDA
+    Menu 1 12 "`n Cambiar de inglés a español`n ---------------------------" MENU_ENG_A_SPA_PRINCIPAL `
+        " [1] Adobe 2025" MENU_ADOBE_ENG_A_SPA `
+        " [2] Adobe 2024" MENU_ADOBE_ENG_A_SPA `
+        " [3] Adobe 2023" MENU_ADOBE_ENG_A_SPA `
+        " [4] Adobe 2022" MENU_ADOBE_ENG_A_SPA `
+        " [5] Adobe 2021" MENU_ADOBE_ENG_A_SPA `
+        " [6] Adobe 2020" MENU_ADOBE_ENG_A_SPA `
+        " [7] Adobe 2019" MENU_ADOBE_ENG_A_SPA `
+        " [8] Adobe 2018" MENU_ADOBE_ENG_A_SPA `
+        " [9] Menú principal" MENU_PRINCIPAL `
+        "[10] Ayuda" MENU_AYUDA `
+        "[11] Reportar un error" MENU_REPORTAR_ERROR `
+        "[12] Salir" MENU_SALIR `
 }
 
 # Menú español a inglés
 function MENU_SPA_A_ENG_PRINCIPAL {
-    Menu 1 10 "`n Cambiar de español a inglés`n ---------------------------" MENU_SPA_A_ENG_PRINCIPAL `
-        " [1] Adobe 2024" MENU_ADOBE_SPA_A_ENG `
-        " [2] Adobe 2023" MENU_ADOBE_SPA_A_ENG `
-        " [3] Adobe 2022" MENU_ADOBE_SPA_A_ENG `
-        " [4] Adobe 2021" MENU_ADOBE_SPA_A_ENG `
-        " [5] Adobe 2020" MENU_ADOBE_SPA_A_ENG `
-        " [6] Adobe 2019" MENU_ADOBE_SPA_A_ENG `
-        " [7] Adobe 2018" MENU_ADOBE_SPA_A_ENG `
-        " [8] Menú principal" MENU_PRINCIPAL `
-        " [9] Salir" MENU_SALIR `
-        "[10] Ayuda" MENU_AYUDA
+    Menu 1 12 "`n Cambiar de español a inglés`n ---------------------------" MENU_SPA_A_ENG_PRINCIPAL `
+        " [1] Adobe 2025" MENU_ADOBE_SPA_A_ENG `
+        " [2] Adobe 2024" MENU_ADOBE_SPA_A_ENG `
+        " [3] Adobe 2023" MENU_ADOBE_SPA_A_ENG `
+        " [4] Adobe 2022" MENU_ADOBE_SPA_A_ENG `
+        " [5] Adobe 2021" MENU_ADOBE_SPA_A_ENG `
+        " [6] Adobe 2020" MENU_ADOBE_SPA_A_ENG `
+        " [7] Adobe 2019" MENU_ADOBE_SPA_A_ENG `
+        " [8] Adobe 2018" MENU_ADOBE_SPA_A_ENG `
+        " [9] Menú principal" MENU_PRINCIPAL `
+        "[10] Ayuda" MENU_AYUDA `
+        "[11] Reportar un error" MENU_REPORTAR_ERROR `
+        "[12] Salir" MENU_SALIR
 }
 
 # Chequea si hay conexión a Internet
@@ -212,110 +221,161 @@ function RUTA_INSTALACION {
 function MENU_ADOBE_ENG_A_SPA {
 
     switch ($OpcionMenu) {
-        1 { $VersionAdobe = 2024
+        1 { $VersionAdobe = 2025
             $FreezeOpcionMenu = 1
             break
         }
-        2 { $VersionAdobe = 2023
+        2 { $VersionAdobe = 2024
             $FreezeOpcionMenu = 2
             break
         }
-        3 { $VersionAdobe = 2022
+        3 { $VersionAdobe = 2023
             $FreezeOpcionMenu = 3
             break
         }
-        4 { $VersionAdobe = 2021
+        4 { $VersionAdobe = 2022
             $FreezeOpcionMenu = 4
             break
         }
-        5 { $VersionAdobe = 2020
+        5 { $VersionAdobe = 2021
             $FreezeOpcionMenu = 5
             break
         }
-        6 { $VersionAdobe = 2019
+        6 { $VersionAdobe = 2020
             $FreezeOpcionMenu = 6
             break
         }
-        7 { $VersionAdobe = 2018
+        7 { $VersionAdobe = 2019
             $FreezeOpcionMenu = 7
             break
         }
+        8 { $VersionAdobe = 2018
+            $FreezeOpcionMenu = 8
+            break
+        }
         default {
-            $VersionAdobe = 2024
+            $VersionAdobe = 2025
             $FreezeOpcionMenu = 1
         }
     }
     #Write-Host "usuario tipeó" $VersionAdobe "**DEBUG**" -Fore Red;
+
+    if ($VersionAdobe -eq 2025) {
     
-    Menu 1 13 "`n Adobe $VersionAdobe - Inglés a español`n -----------------------------" MENU_ADOBE_ENG_A_SPA `
-        " [1] After Effects" MENU_AE_ENG_A_SPA `
-        " [2] Premiere Pro" MENU_PPRO_ENG_A_SPA `
-        " [3] Audition" MENU_AUDI_ENG_A_SPA `
-        " [4] InDesign" MENU_IND_ENG_A_SPA `
-        " [5] Media Encoder" MENU_ME_ENG_A_SPA `
-        " [6] Photoshop" MENU_PS_ENG_A_SPA `
-        " [7] Animate" MENU_ANI_ENG_A_SPA `
-        " [8] Illustrator" MENU_ILU_ENG_A_SPA `
-        " [9] InCopy" MENU_INC_ENG_A_SPA `
-        "[10] Character Animator" MENU_CA_ENG_A_SPA `
-        "[11] Menú principal" MENU_PRINCIPAL `
-        "[12] Salir" MENU_SALIR `
-        "[13] Ayuda" MENU_AYUDA
+        Menu 1 13 "`n Adobe $VersionAdobe - Inglés a español`n -----------------------------" MENU_ADOBE_ENG_A_SPA `
+            " [1] After Effects" MENU_AE_ENG_A_SPA `
+            " [2] Premiere Pro" MENU_PPRO_ENG_A_SPA `
+            " [3] Audition" MENU_AUDI_ENG_A_SPA `
+            " [4] InDesign" MENU_IND_ENG_A_SPA `
+            " [5] Media Encoder" MENU_ME_ENG_A_SPA `
+            " [6] Photoshop" MENU_PS_ENG_A_SPA `
+            " [7] Illustrator" MENU_ILU_ENG_A_SPA `
+            " [8] InCopy" MENU_INC_ENG_A_SPA `
+            " [9] Character Animator" MENU_CA_ENG_A_SPA `
+            "[10] Menú principal" MENU_PRINCIPAL `
+            "[11] Ayuda" MENU_AYUDA `
+            "[12] Reportar un error" MENU_REPORTAR_ERROR `
+            "[13] Salir" MENU_SALIR
+    
+    } else {
+
+        Menu 1 14 "`n Adobe $VersionAdobe - Inglés a español`n -----------------------------" MENU_ADOBE_ENG_A_SPA `
+            " [1] After Effects" MENU_AE_ENG_A_SPA `
+            " [2] Premiere Pro" MENU_PPRO_ENG_A_SPA `
+            " [3] Audition" MENU_AUDI_ENG_A_SPA `
+            " [4] InDesign" MENU_IND_ENG_A_SPA `
+            " [5] Media Encoder" MENU_ME_ENG_A_SPA `
+            " [6] Photoshop" MENU_PS_ENG_A_SPA `
+            " [7] Animate" MENU_ANI_ENG_A_SPA `
+            " [8] Illustrator" MENU_ILU_ENG_A_SPA `
+            " [9] InCopy" MENU_INC_ENG_A_SPA `
+            "[10] Character Animator" MENU_CA_ENG_A_SPA `
+            "[11] Menú principal" MENU_PRINCIPAL `
+            "[12] Ayuda" MENU_AYUDA `
+            "[13] Reportar un error" MENU_REPORTAR_ERROR `
+            "[14] Salir" MENU_SALIR
+    }
 }
 
 # Menú Adobe español a inglés
 function MENU_ADOBE_SPA_A_ENG {
 
     switch ($OpcionMenu) {
-        1 { $VersionAdobe = 2024
+        1 { $VersionAdobe = 2025
             $FreezeOpcionMenu = 1
             break
         }
-        2 { $VersionAdobe = 2023
+        2 { $VersionAdobe = 2024
             $FreezeOpcionMenu = 2
             break
         }
-        3 { $VersionAdobe = 2022
+        3 { $VersionAdobe = 2023
             $FreezeOpcionMenu = 3
             break
         }
-        4 { $VersionAdobe = 2021
+        4 { $VersionAdobe = 2022
             $FreezeOpcionMenu = 4
             break
         }
-        5 { $VersionAdobe = 2020
+        5 { $VersionAdobe = 2021
             $FreezeOpcionMenu = 5
             break
         }
-        6 { $VersionAdobe = 2019
+        6 { $VersionAdobe = 2020
             $FreezeOpcionMenu = 6
             break
         }
-        7 { $VersionAdobe = 2018
+        7 { $VersionAdobe = 2019
             $FreezeOpcionMenu = 7
             break
         }
+        8 { $VersionAdobe = 2018
+            $FreezeOpcionMenu = 8
+            break
+        }
         default {
-            $VersionAdobe = 2024
+            $VersionAdobe = 2025
             $FreezeOpcionMenu = 1
         }
     }
     #Write-Host "usuario tipeó" $VersionAdobe "**DEBUG**" -Fore Red;
 
-    Menu 1 13 "`n Adobe $VersionAdobe - Español a inglés`n -----------------------------" MENU_ADOBE_SPA_A_ENG `
-        " [1] After Effects" MENU_AE_SPA_A_ENG `
-        " [2] Premiere Pro" MENU_PPRO_SPA_A_ENG `
-        " [3] Audition" MENU_AUDI_SPA_A_ENG `
-        " [4] InDesign" MENU_IND_SPA_A_ENG `
-        " [5] Media Encoder" MENU_ME_SPA_A_ENG `
-        " [6] Photoshop" MENU_PS_SPA_A_ENG `
-        " [7] Animate" MENU_ANI_SPA_A_ENG `
-        " [8] Illustrator" MENU_ILU_SPA_A_ENG `
-        " [9] InCopy" MENU_INC_SPA_A_ENG `
-        "[10] Character Animator" MENU_CA_SPA_A_ENG `
-        "[11] Menú principal" MENU_PRINCIPAL `
-        "[12] Salir" MENU_SALIR `
-        "[13] Ayuda" MENU_AYUDA
+    # Chequea versión porque Animate no está disponible en la 2025
+    if ($VersionAdobe -eq 2025) {
+
+        Menu 1 13 "`n Adobe $VersionAdobe - Español a inglés`n -----------------------------" MENU_ADOBE_SPA_A_ENG `
+            " [1] After Effects" MENU_AE_SPA_A_ENG `
+            " [2] Premiere Pro" MENU_PPRO_SPA_A_ENG `
+            " [3] Audition" MENU_AUDI_SPA_A_ENG `
+            " [4] InDesign" MENU_IND_SPA_A_ENG `
+            " [5] Media Encoder" MENU_ME_SPA_A_ENG `
+            " [6] Photoshop" MENU_PS_SPA_A_ENG `
+            " [7] Illustrator" MENU_ILU_SPA_A_ENG `
+            " [8] InCopy" MENU_INC_SPA_A_ENG `
+            " [9] Character Animator" MENU_CA_SPA_A_ENG `
+            "[10] Menú principal" MENU_PRINCIPAL `
+            "[11] Ayuda" MENU_AYUDA `
+            "[12] Reportar un error" MENU_REPORTAR_ERROR `
+            "[13] Salir" MENU_SALIR
+
+    } else {
+
+        Menu 1 14 "`n Adobe $VersionAdobe - Español a inglés`n -----------------------------" MENU_ADOBE_SPA_A_ENG `
+            " [1] After Effects" MENU_AE_SPA_A_ENG `
+            " [2] Premiere Pro" MENU_PPRO_SPA_A_ENG `
+            " [3] Audition" MENU_AUDI_SPA_A_ENG `
+            " [4] InDesign" MENU_IND_SPA_A_ENG `
+            " [5] Media Encoder" MENU_ME_SPA_A_ENG `
+            " [6] Photoshop" MENU_PS_SPA_A_ENG `
+            " [7] Animate" MENU_ANI_SPA_A_ENG `
+            " [8] Illustrator" MENU_ILU_SPA_A_ENG `
+            " [9] InCopy" MENU_INC_SPA_A_ENG `
+            "[10] Character Animator" MENU_CA_SPA_A_ENG `
+            "[11] Menú principal" MENU_PRINCIPAL `
+            "[12] Ayuda" MENU_AYUDA `
+            "[13] Reportar un error" MENU_REPORTAR_ERROR `
+            "[14] Salir" MENU_SALIR
+    }
 }
 
 # Cierra aplicaciones antes de cambiar el idioma (https://chat.openai.com/share/ef3f3502-4870-41b7-ae5b-81a8e7c43ea5)
@@ -749,29 +809,6 @@ function MENU_ME_ENG_A_SPA {
             Start-Sleep -Seconds 1
         }
     }
-    # else {
-    #     Write-Host " Tag <Data key=`"installedLanguages`"> not found in the file."
-    # }
-
-
-
-    # $contenidoArchivo = Get-Content -Path "$RutaInstalacion\AMT\application.xml" -Raw
-
-    # $regex = '(<Data key="installedLanguages">)(.*?)(<\/Data>)'
-    # $nuevoContenido = [regex]::Replace($contenidoArchivo, $regex, {
-    #     param($match)
-    #     return $match.Groups[1].Value + "$XmlEsEs" + $match.Groups[3].Value
-    # })
-
-    # if ($nuevoContenido -eq $contenidoArchivo) {
-    #     Write-Host $NoCambio -Fore Red
-    #     Write-Host $Razones -Fore Yellow
-    #     Start-Sleep -Seconds 1
-    # } else {
-    #     Set-Content -Path "$RutaInstalacion\AMT\application.xml" -Value $nuevoContenido
-    #     Write-Host "$CambioEngSpa [$RutaInstalacion]" -Fore DarkGreen
-    #     Start-Sleep -Seconds 1
-    # }
 
     # Mantiene última versión elegida por el usuario en menú Adobe
     $OpcionMenu = $FreezeOpcionMenu
@@ -1467,7 +1504,7 @@ function MENU_UPDATE {
 function MENU_SALIR {
     Write-Host $SimiDesc -Fore DarkGray
     Write-Host $MensajeResenia -Fore Yellow
-    Start-Sleep -Seconds 5
+    Start-Sleep -Seconds 3
     Stop-Process -Id $PID
 }
 
@@ -1476,6 +1513,15 @@ function MENU_AYUDA {
     Write-Host $MensajeUrlAyuda -Fore Yellow
     Start-Sleep -Seconds 2
     Start-Process $UrlAyudaTienda
+    # Vuelve al menú
+    MENU_PRINCIPAL
+}
+
+# Reportar error
+function MENU_REPORTAR_ERROR {
+    Write-Host $MensajeRepError -Fore Yellow
+    Start-Sleep -Seconds 2
+    Start-Process $UrlReportarError
     # Vuelve al menú
     MENU_PRINCIPAL
 }
