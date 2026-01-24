@@ -1,4 +1,4 @@
-﻿# Simi v2.1 (Windows)
+﻿# Simi (Windows)
 # Cambiá el idioma de los programas de Adobe sin reinstalarlos
 # https://leandroperez.art/tienda/productos-gratuitos/simi-cambia-idioma-adobe-sin-reinstalar/
 # by Leandro Pérez
@@ -7,7 +7,7 @@
 #Requires -Version 5.1
 
 # Variables GitHub
-$script:VersionActualSimi = "2.1"
+$script:VersionActualSimi = "2.2"
 $script:NombreRelease = "Simi_v"
 $script:UltimaVersionTxt
 
@@ -1012,9 +1012,9 @@ function MENU_ANI_ENG_A_SPA {
 
         Write-Host $Cambiando -Fore Yellow
 
-        [void](New-Item -Path "$RutaInstalacion\$LocaleEsEs" -ItemType Directory -Force)
+        [void](New-Item -Path "$RutaInstalacion" -ItemType Directory -Force)
         $Shell = New-Object -com Shell.Application
-        $Shell.Namespace("$RutaInstalacion\$LocaleEsEs").copyhere($Shell.NameSpace("$RutaInstalacion\$LocaleEsEs.zip").Items(), 0x14)
+        $Shell.Namespace("$RutaInstalacion").copyhere($Shell.NameSpace("$RutaInstalacion\$LocaleEsEs.zip").Items(), 0x14)
 
         Remove-Item "$RutaInstalacion\$LocaleEsEs.zip" -Force -ErrorAction SilentlyContinue
         Write-Host "$CambioEngSpa [$RutaInstalacion]" -Fore DarkGreen
@@ -1078,9 +1078,9 @@ function MENU_ANI_SPA_A_ENG {
 
         Write-Host $Cambiando -Fore Yellow
 
-        [void](New-Item -Path "$RutaInstalacion\$LocaleEnUs" -ItemType Directory -Force)
+        [void](New-Item -Path "$RutaInstalacion" -ItemType Directory -Force)
         $Shell = New-Object -com Shell.Application
-        $Shell.Namespace("$RutaInstalacion\$LocaleEnUs").copyhere($Shell.NameSpace("$RutaInstalacion\$LocaleEnUs.zip").Items(), 0x14)
+        $Shell.Namespace("$RutaInstalacion").copyhere($Shell.NameSpace("$RutaInstalacion\$LocaleEnUs.zip").Items(), 0x14)
 
         Remove-Item "$RutaInstalacion\$LocaleEnUs.zip" -Force -ErrorAction SilentlyContinue
         Write-Host "$CambioSpaEng [$RutaInstalacion]" -Fore DarkGreen
