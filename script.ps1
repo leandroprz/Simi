@@ -1,4 +1,4 @@
-﻿# Simi v1.1
+﻿# Simi v1.2
 # Cambiá el idioma de los programas de Adobe sin reinstalarlos
 # https://leandroperez.art/tienda/productos-gratuitos/simi-cambia-idioma-adobe-sin-reinstalar/
 # © Leandro Pérez
@@ -12,15 +12,16 @@ $global:XmlEnUs = '<Data key="installedLanguages">en_US</Data>'
 $global:XmlEnGb = '<Data key="installedLanguages">en_GB</Data>'
 $global:XmlEsEs = '<Data key="installedLanguages">es_ES</Data>'
 $global:XmlEsMx = '<Data key="installedLanguages">es_MX</Data>'
-$global:XmlAllLang = '<Data key="installedLanguages">cs_CZ,da_DK,de_DE,en_AE,en_GB,en_IL,en_US,es_ES,es_MX,fi_FI,fr_CA,fr_FR,fr_MA,hu_HU,it_IT,ja_JP,ko_KR,nb_NO,nl_NL,pl_PL,pt_BR,ru_RU,sv_SE,tr_TR,uk_UA,zh_CN,zh_TW</Data>'
+$global:XmlAllLang1 = '<Data key="installedLanguages">cs_CZ,da_DK,de_DE,en_AE,en_GB,en_IL,en_US,es_ES,es_MX,fi_FI,fr_CA,fr_FR,fr_MA,hu_HU,it_IT,ja_JP,ko_KR,nb_NO,nl_NL,pl_PL,pt_BR,ru_RU,sv_SE,tr_TR,uk_UA,zh_CN,zh_TW</Data>'
+$global:XmlAllLang2 = '<Data key="installedLanguages">cs_CZ,da_DK,de_DE,el_GR,en_AE,en_GB,en_IL,en_US,es_ES,es_MX,fi_FI,fil_PH,fr_CA,fr_FR,fr_MA,hi_IN,hu_HU,id_ID,it_IT,ja_JP,ko_KR,ms_MY,nb_NO,nl_NL,pl_PL,pt_BR,ro_RO,ru_RU,sv_SE,th_TH,tr_TR,uk_UA,vi_VN,zh_CN,zh_TW</Data>'
 $global:CarpetaEnUs = 'en_US'
 $global:CarpetaEnGb = 'en_GB'
 $global:CarpetaEsEs = 'es_ES'
 $global:CarpetaEsMx = 'es_MX'
 
 # Variables mensajes
-$global:CambioEngSpa = "`n Se cambió el idioma de inglés a español correctamente.`n Ahora regresarás al menú.`n"
-$global:CambioSpaEng = "`n Se cambió el idioma de español a inglés correctamente.`n Ahora regresarás al menú.`n"
+$global:CambioEngSpa = "`n Se cambió el idioma de inglés a español correctamente.`n"
+$global:CambioSpaEng = "`n Se cambió el idioma de español a inglés correctamente.`n"
 $global:NoCambio = "`n ¡No se pudo cambiar el idioma!"
 $global:Razones = "`n Puede ser por diferentes razones:`n - El programa no está instalado en la ruta por defecto (C:\Archivos de programa).`n - El programa no se instaló usando la aplicación Creative Cloud.`n - No abriste esta aplicación como Administrador."
 
@@ -59,41 +60,45 @@ function Menu ($MenuNumero, $MenuCierra, $NombreMenu, $NombreFuncionMenu, $Opcio
 
 # Menú principal, muestra idiomas
 function MENU_PRINCIPAL {
-    Write-Host "`n`n Simi v1.1 - © Leandro Pérez`n Cambiá el idioma de Adobe sin reinstalar los programas" -Fore DarkGray;
+    Write-Host "`n`n Simi v1.2 - © Leandro Pérez`n Cambiá el idioma de Adobe sin reinstalar los programas" -Fore DarkGray;
     Menu 1 4 "`n Menú principal`n ==============" MENU_PRINCIPAL "1. Cambiar de inglés a español" MENU_ENG_A_SPA_PRINCIPAL "2. Cambiar de español a inglés" MENU_SPA_A_ENG_PRINCIPAL "3. Salir" MENU_SALIR "4. Ayuda" MENU_AYUDA
 }
 
 # Menú principal inglés a español
 function MENU_ENG_A_SPA_PRINCIPAL {
-    Menu 1 7 "`n Cambiar de inglés a español`n ===========================" MENU_ENG_A_SPA_PRINCIPAL "1. Adobe 2021" MENU_ADOBE_ENG_A_SPA "2. Adobe 2020" MENU_ADOBE_ENG_A_SPA "3. Adobe 2019" MENU_ADOBE_ENG_A_SPA "4. Adobe 2018" MENU_ADOBE_ENG_A_SPA "5. Menú principal" MENU_PRINCIPAL "6. Salir" MENU_SALIR "7. Ayuda" MENU_AYUDA
+    Menu 1 8 "`n Cambiar de inglés a español`n ===========================" MENU_ENG_A_SPA_PRINCIPAL "1. Adobe 2022" MENU_ADOBE_ENG_A_SPA "2. Adobe 2021" MENU_ADOBE_ENG_A_SPA "3. Adobe 2020" MENU_ADOBE_ENG_A_SPA "4. Adobe 2019" MENU_ADOBE_ENG_A_SPA "5. Adobe 2018" MENU_ADOBE_ENG_A_SPA "6. Menú principal" MENU_PRINCIPAL "7. Salir" MENU_SALIR "8. Ayuda" MENU_AYUDA
 }
 
 # Menú principal español a inglés
 function MENU_SPA_A_ENG_PRINCIPAL {
-    Menu 1 7 "`n Cambiar de español a inglés`n ===========================" MENU_SPA_A_ENG_PRINCIPAL "1. Adobe 2021" MENU_ADOBE_SPA_A_ENG "2. Adobe 2020" MENU_ADOBE_SPA_A_ENG "3. Adobe 2019" MENU_ADOBE_SPA_A_ENG "4. Adobe 2018" MENU_ADOBE_SPA_A_ENG "5. Menú principal" MENU_PRINCIPAL "6. Salir" MENU_SALIR "7. Ayuda" MENU_AYUDA
+    Menu 1 8 "`n Cambiar de español a inglés`n ===========================" MENU_SPA_A_ENG_PRINCIPAL "1. Adobe 2022" MENU_ADOBE_SPA_A_ENG "2. Adobe 2021" MENU_ADOBE_SPA_A_ENG "3. Adobe 2020" MENU_ADOBE_SPA_A_ENG "4. Adobe 2019" MENU_ADOBE_SPA_A_ENG "5. Adobe 2018" MENU_ADOBE_SPA_A_ENG "6. Menú principal" MENU_PRINCIPAL "7. Salir" MENU_SALIR "8. Ayuda" MENU_AYUDA
 }
 
 # Menú Adobe inglés a español
 function MENU_ADOBE_ENG_A_SPA {
     switch($OpcionMenu) {
-        1 { $VersionAdobe = 2021
+        1 { $VersionAdobe = 2022
             $FreezeOpcionMenu = 1
             break
         }
-        2 { $VersionAdobe = 2020
+        2 { $VersionAdobe = 2021
             $FreezeOpcionMenu = 2
             break
         }
-        3 { $VersionAdobe = 2019
+        3 { $VersionAdobe = 2020
             $FreezeOpcionMenu = 3
             break
         }
-        4 { $VersionAdobe = 2018
+        4 { $VersionAdobe = 2019
             $FreezeOpcionMenu = 4
             break
         }
+        5 { $VersionAdobe = 2018
+            $FreezeOpcionMenu = 5
+            break
+        }
         default {
-            $VersionAdobe = 2021
+            $VersionAdobe = 2022
             $FreezeOpcionMenu = 1
         }
     }
@@ -105,24 +110,28 @@ function MENU_ADOBE_ENG_A_SPA {
 # Menú Adobe español a inglés
 function MENU_ADOBE_SPA_A_ENG {
     switch($OpcionMenu) {
-        1 { $VersionAdobe = 2021
+        1 { $VersionAdobe = 2022
             $FreezeOpcionMenu = 1
             break
         }
-        2 { $VersionAdobe = 2020
+        2 { $VersionAdobe = 2021
             $FreezeOpcionMenu = 2
             break
         }
-        3 { $VersionAdobe = 2019
+        3 { $VersionAdobe = 2020
             $FreezeOpcionMenu = 3
             break
         }
-        4 { $VersionAdobe = 2018
+        4 { $VersionAdobe = 2019
             $FreezeOpcionMenu = 4
             break
         }
+        5 { $VersionAdobe = 2018
+            $FreezeOpcionMenu = 5
+            break
+        }
         default {
-            $VersionAdobe = 2021
+            $VersionAdobe = 2022
             $FreezeOpcionMenu = 1
         }
     }
@@ -398,11 +407,15 @@ function MENU_ME_ENG_A_SPA {
     cd $Env:Programfiles
     cd $RutaInstalacion
 
-    $Idioma = Get-Content application.xml | Where-Object {($_ -match $XmlAllLang) -or ($_ -match $XmlEnUs) -or ($_ -match $XmlEnGb)}
+    $Idioma = Get-Content application.xml | Where-Object {($_ -match $XmlAllLang1) -or ($_ -match $XmlAllLang2) -or ($_ -match $XmlEnUs) -or ($_ -match $XmlEnGb)}
     $Contenido = Get-Content application.xml
 
-    if ($Idioma -match $XmlAllLang) {
-        $Contenido.replace($XmlAllLang,$XmlEsEs) | Set-Content application.xml
+    if ($Idioma -match $XmlAllLang1) {
+        $Contenido.replace($XmlAllLang1,$XmlEsEs) | Set-Content application.xml
+        Write-Host $CambioEngSpa -Fore DarkGreen;
+        Start-Sleep -Seconds 1
+    } elseif ($Idioma -match $XmlAllLang2) {
+        $Contenido.replace($XmlAllLang2,$XmlEsEs) | Set-Content application.xml
         Write-Host $CambioEngSpa -Fore DarkGreen;
         Start-Sleep -Seconds 1
     } elseif ($Idioma -match $XmlEnUs) {
@@ -433,11 +446,15 @@ function MENU_ME_SPA_A_ENG {
     cd $Env:Programfiles
     cd $RutaInstalacion
 
-    $Idioma = Get-Content application.xml | Where-Object {($_ -match $XmlAllLang) -or ($_ -match $XmlEsEs) -or ($_ -match $XmlEsMx)}
+    $Idioma = Get-Content application.xml | Where-Object {($_ -match $XmlAllLang1) -or ($_ -match $XmlAllLang2) -or ($_ -match $XmlEsEs) -or ($_ -match $XmlEsMx)}
     $Contenido = Get-Content application.xml
 
-    if ($Idioma -match $XmlAllLang) {
-        $Contenido.replace($XmlAllLang,$XmlEnUs) | Set-Content application.xml
+    if ($Idioma -match $XmlAllLang1) {
+        $Contenido.replace($XmlAllLang1,$XmlEnUs) | Set-Content application.xml
+        Write-Host $CambioSpaEng -Fore DarkGreen;
+        Start-Sleep -Seconds 1
+    } elseif ($Idioma -match $XmlAllLang2) {
+        $Contenido.replace($XmlAllLang2,$XmlEnUs) | Set-Content application.xml
         Write-Host $CambioSpaEng -Fore DarkGreen;
         Start-Sleep -Seconds 1
     } elseif ($Idioma -match $XmlEsEs) {
