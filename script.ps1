@@ -1,14 +1,14 @@
-﻿# Simi v2.0
+﻿# Simi v2.1 (Windows)
 # Cambiá el idioma de los programas de Adobe sin reinstalarlos
 # https://leandroperez.art/tienda/productos-gratuitos/simi-cambia-idioma-adobe-sin-reinstalar/
-# © Leandro Pérez
+# by Leandro Pérez
 
 # Versión mínima requerida de PowerShell
 #Requires -Version 5.1
 
 # Variables GitHub
-$script:VersionActualSimi = "2.0"
-$script:NombreRelease = "Simi_Leandro_Perez_v"
+$script:VersionActualSimi = "2.1"
+$script:NombreRelease = "Simi_v"
 $script:UltimaVersionTxt
 
 # Cambia nombre del título de la ventana
@@ -34,10 +34,12 @@ $script:LocaleEsEs = 'es_ES'
 $script:LocaleEsMx = 'es_MX'
 
 # Locales y releases
-$script:UrlLocales = "https://github.com/leandroprz/Simi/raw/main/locales"
-$script:UrlUltimaVersionWin = "https://github.com/leandroprz/Simi/raw/main/vcheck/latest-win.txt"
+$script:UrlLocales = "https://github.com/leandroprz/Simi/raw/main/locales/win"
+$script:UrlUltimaVersionWin = "https://github.com/leandroprz/Simi/raw/main/vcheck/latest.txt"
 $script:UrlReleases = "https://github.com/leandroprz/Simi/raw/main/bin"
-#$script:UrlLocales = "https://lp.local/simi" **DEBUG**
+#$script:UrlLocales = "http://localhost/simi/locales/win"
+#$script:UrlUltimaVersionWin = "http://localhost/simi/vcheck/latest.txt"
+#$script:UrlReleases = "http://localhost/simi/bin"
 
 # Variables mensajes
 $script:CambioEngSpa = "`n Se cambió el idioma de inglés a español correctamente en la ruta:`n"
@@ -54,7 +56,7 @@ $script:ErrorCambioPs = "`n Ya tenés instalado el idioma seleccionado. Lo podé
 $script:ErrorCambioYaInstalado = " - Ya tenés instalado el idioma seleccionado"
 $script:Descargando = "`n Descargando archivo..."
 $script:SinConexion = "`n No es posible conectarse a la página de descarga del archivo. Intentando nuevamente en 5s..."
-$script:SimiDesc = "`n`n Simi v$VersionActualSimi - © Leandro Pérez`n Cambiá el idioma de Adobe sin reinstalar los programas"
+$script:SimiDesc = "`n`n Simi v$VersionActualSimi by Leandro Pérez`n Cambiá el idioma de Adobe sin reinstalar los programas"
 $script:BuscandoVersion = "`n Buscando nueva versión..."
 $script:NuevaVDisponible = " ¡Hay una nueva versión disponible!"
 $script:DeseaDescargar = "`n ¿Querés descargarla? (S/N)"
@@ -875,11 +877,10 @@ function MENU_PS_ENG_A_SPA {
         $RutaInstalacion = "$RutaInstalacion"
     }
 
-
     if ( -not( (Test-Path -Path "$RutaInstalacion\Locales\$LocaleEsEs" -PathType Container) -or (Test-Path -Path "$RutaInstalacion\Locales\$LocaleEsMx" -PathType Container) ) ) {
         
         if ( (Test-Path -Path "$DestinoDescarga\$LocaleEsEs.zip" -PathType Leaf) -or (Test-Path -Path "$DestinoDescarga\$LocaleEsMx.zip" -PathType Leaf) ) {
-            Copy-Item -Path "$DestinoDescarga\$LocaleEsEs.zip" -Destination "$RutaInstalacion\Locales\$LocaleEsEs.zip" -Force
+            Copy-Item -Path "$DestinoDescarga\$LocaleEsEs.zip" -Destination "$RutaInstalacion\$LocaleEsEs.zip" -Force
         } else {
 
             Verifica-Conexion
@@ -888,16 +889,16 @@ function MENU_PS_ENG_A_SPA {
             TAMANIO_DESCARGA -Url $SourceDescarga
             $null = New-Item -Path $DestinoDescarga -ItemType Directory -Force
             Invoke-WebRequest -Uri $SourceDescarga -OutFile "$DestinoDescarga\$LocaleEsEs.zip"
-            Copy-Item -Path "$DestinoDescarga\$LocaleEsEs.zip" -Destination "$RutaInstalacion\Locales\$LocaleEsEs.zip" -Force
+            Copy-Item -Path "$DestinoDescarga\$LocaleEsEs.zip" -Destination "$RutaInstalacion\$LocaleEsEs.zip" -Force
         }
 
         Write-Host $Cambiando -Fore Yellow        
         # Unzip, copy, replace and keeps encoding (https://gist.github.com/PrateekKumarSingh/1dc3765a50e0e0cced63574316382304)
-        [void](New-Item -Path "$RutaInstalacion\Locales\$LocaleEsEs" -ItemType Directory -Force)
+        [void](New-Item -Path "$RutaInstalacion" -ItemType Directory -Force)
         $Shell = New-Object -com Shell.Application
-        $Shell.Namespace("$RutaInstalacion\Locales\$LocaleEsEs").copyhere($Shell.NameSpace("$RutaInstalacion\Locales\$LocaleEsEs.zip").Items(), 0x14) #0x14 overwrite AND silent
+        $Shell.Namespace("$RutaInstalacion").copyhere($Shell.NameSpace("$RutaInstalacion\$LocaleEsEs.zip").Items(), 0x14) #0x14 overwrite AND silent
 
-        Remove-Item "$RutaInstalacion\Locales\$LocaleEsEs.zip" -Force -ErrorAction SilentlyContinue
+        Remove-Item "$RutaInstalacion\$LocaleEsEs.zip" -Force -ErrorAction SilentlyContinue
         Write-Host "$CambioEngSpa [$RutaInstalacion] $CambioPs" -Fore DarkGreen
         Start-Sleep -Seconds 1
 
@@ -933,7 +934,7 @@ function MENU_PS_SPA_A_ENG {
     if ( -not( (Test-Path -Path "$RutaInstalacion\Locales\$LocaleEnUs" -PathType Container) -or (Test-Path -Path "$RutaInstalacion\Locales\$LocaleEnGb" -PathType Container) ) ) {
         
         if ( (Test-Path -Path "$DestinoDescarga\$LocaleEnUs.zip" -PathType Leaf) -or (Test-Path -Path "$DestinoDescarga\$LocaleEnGb.zip" -PathType Leaf) ) {
-            Copy-Item -Path "$DestinoDescarga\$LocaleEnUs.zip" -Destination "$RutaInstalacion\Locales\$LocaleEnUs.zip" -Force
+            Copy-Item -Path "$DestinoDescarga\$LocaleEnUs.zip" -Destination "$RutaInstalacion\$LocaleEnUs.zip" -Force
         } else {
 
             Verifica-Conexion
@@ -942,16 +943,16 @@ function MENU_PS_SPA_A_ENG {
             TAMANIO_DESCARGA -Url $SourceDescarga
             $null = New-Item -Path $DestinoDescarga -ItemType Directory -Force
             Invoke-WebRequest -Uri $SourceDescarga -OutFile "$DestinoDescarga\$LocaleEnUs.zip"
-            Copy-Item -Path "$DestinoDescarga\$LocaleEnUs.zip" -Destination "$RutaInstalacion\Locales\$LocaleEnUs.zip" -Force
+            Copy-Item -Path "$DestinoDescarga\$LocaleEnUs.zip" -Destination "$RutaInstalacion\$LocaleEnUs.zip" -Force
         }
 
         Write-Host $Cambiando -Fore Yellow
 
-        [void](New-Item -Path "$RutaInstalacion\Locales\$LocaleEnUs" -ItemType Directory -Force)
+        [void](New-Item -Path "$RutaInstalacion" -ItemType Directory -Force)
         $Shell = New-Object -com Shell.Application
-        $Shell.Namespace("$RutaInstalacion\Locales\$LocaleEnUs").copyhere($Shell.NameSpace("$RutaInstalacion\Locales\$LocaleEnUs.zip").Items(), 0x14)
+        $Shell.Namespace("$RutaInstalacion").copyhere($Shell.NameSpace("$RutaInstalacion\$LocaleEnUs.zip").Items(), 0x14)
 
-        Remove-Item "$RutaInstalacion\Locales\$LocaleEnUs.zip" -Force -ErrorAction SilentlyContinue
+        Remove-Item "$RutaInstalacion\$LocaleEnUs.zip" -Force -ErrorAction SilentlyContinue
         Write-Host "$CambioSpaEng [$RutaInstalacion] $CambioPs" -Fore DarkGreen
         Start-Sleep -Seconds 1
 
@@ -1450,8 +1451,9 @@ function MENU_UPDATE {
     Write-Host $BuscandoVersion -Fore Yellow
     Start-Sleep -Seconds 2
     $VersionTxt = Invoke-WebRequest -Uri $UrlUltimaVersionWin
-    $UltimaVersionTxt = $VersionTxt.Content.Trim()    
-    $UrlNuevaVersion = "$UrlReleases/$NombreRelease$UltimaVersionTxt.exe"
+    $UltimaVersionTxt = $VersionTxt.Content.Trim()
+    $NombreVersionWin = "_win"
+    $UrlNuevaVersion = "$UrlReleases/$NombreRelease$UltimaVersionTxt$NombreVersionWin.exe"
 
     # Compara versión del script con la última online
     if ($UltimaVersionTxt -gt $VersionActualSimi) {
@@ -1465,10 +1467,10 @@ function MENU_UPDATE {
             Write-Host $SimiDesc"`n" -Fore DarkGray
             TAMANIO_DESCARGA -Url $UrlNuevaVersion
             $null = New-Item -Path $DestinoDescarga -ItemType Directory -Force
-            Invoke-WebRequest -Uri $UrlNuevaVersion -OutFile "$DestinoDescarga\$NombreRelease$UltimaVersionTxt.exe"
+            Invoke-WebRequest -Uri $UrlNuevaVersion -OutFile "$DestinoDescarga\$NombreRelease$UltimaVersionTxt$NombreVersionWin.exe"
 
             # Chequea si el archivo se descargó
-            if (Test-Path "$DestinoDescarga\$NombreRelease$UltimaVersionTxt.exe" -PathType Leaf) {
+            if (Test-Path "$DestinoDescarga\$NombreRelease$UltimaVersionTxt$NombreVersionWin.exe" -PathType Leaf) {
 
                 Write-Host $DescargaCorrecta -Fore DarkGreen
                 $EjecutarSiNo = Read-Host $DeseaAbrir
@@ -1476,7 +1478,7 @@ function MENU_UPDATE {
                 
                 if ($EjecutarSiNo -eq "S" -or $EjecutarSiNo -eq "s") {
 
-                    Start-Process -FilePath "$DestinoDescarga\$NombreRelease$UltimaVersionTxt.exe"
+                    Start-Process -FilePath "$DestinoDescarga\$NombreRelease$UltimaVersionTxt$NombreVersionWin.exe"
                     Stop-Process -Id $PID
 
                 } else {
