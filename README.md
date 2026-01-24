@@ -16,4 +16,4 @@ La rama `archive-powershell` existe únicamente como archivo histórico ya que S
 ## Ramas activas del proyecto
 
 - **`main`** → proyecto activo
-- **`archivos-idioma`** → archivos de idioma
+- **`archivos-idioma`** → archivos de idioma para los programas de Adobe
