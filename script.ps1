@@ -1,4 +1,4 @@
-﻿# Simi v1.7
+﻿# Simi v1.8
 # Cambiá el idioma de los programas de Adobe sin reinstalarlos
 # https://leandroperez.art/tienda/productos-gratuitos/simi-cambia-idioma-adobe-sin-reinstalar/
 # © Leandro Pérez
@@ -46,7 +46,7 @@ $script:ErrorCambioPs = "`n Ya tenés instalado el idioma seleccionado. Lo podé
 $script:ErrorCambioYaInstalado = " - Ya tenés instalado el idioma seleccionado."
 $script:Descargando = "`n Descargando archivo de idioma..."
 $script:SinConexion = "`n No es posible conectarse a la página de descarga de idiomas. Intentando nuevamente en 5s..."
-$script:SimiDesc = "`n`n Simi v1.7 - © Leandro Pérez`n Cambiá el idioma de Adobe sin reinstalar los programas"
+$script:SimiDesc = "`n`n Simi v1.8 - © Leandro Pérez`n Cambiá el idioma de Adobe sin reinstalar los programas"
 
 # Fix for $PSScriptRoot when converting to exe (https://stackoverflow.com/a/60122064/5204005)
 $script:ScriptDir = if (-not $PSScriptRoot) {
@@ -56,7 +56,7 @@ $script:ScriptDir = if (-not $PSScriptRoot) {
     }
 
 # Menú con opciones
-function Menu ($MenuNumero, $MenuCierra, $NombreMenu, $NombreFuncionMenu, $OpcionMenu1, $MenuFuncion1, $OpcionMenu2, $MenuFuncion2, $OpcionMenu3, $MenuFuncion3, $OpcionMenu4, $MenuFuncion4, $OpcionMenu5, $MenuFuncion5, $OpcionMenu6, $MenuFuncion6, $OpcionMenu7, $MenuFuncion7, $OpcionMenu8, $MenuFuncion8, $OpcionMenu9, $MenuFuncion9, $OpcionMenu10, $MenuFuncion10, $OpcionMenu11, $MenuFuncion11, $OpcionMenu12, $MenuFuncion12) {
+function Menu ($MenuNumero, $MenuCierra, $NombreMenu, $NombreFuncionMenu, $OpcionMenu1, $MenuFuncion1, $OpcionMenu2, $MenuFuncion2, $OpcionMenu3, $MenuFuncion3, $OpcionMenu4, $MenuFuncion4, $OpcionMenu5, $MenuFuncion5, $OpcionMenu6, $MenuFuncion6, $OpcionMenu7, $MenuFuncion7, $OpcionMenu8, $MenuFuncion8, $OpcionMenu9, $MenuFuncion9, $OpcionMenu10, $MenuFuncion10, $OpcionMenu11, $MenuFuncion11, $OpcionMenu12, $MenuFuncion12, $OpcionMenu13, $MenuFuncion13) {
 
     Write-Host $SimiDesc -Fore DarkGray
     Write-Host "`n$NombreMenu`n" -Fore Gray
@@ -72,6 +72,7 @@ function Menu ($MenuNumero, $MenuCierra, $NombreMenu, $NombreFuncionMenu, $Opcio
     if ($OpcionMenu10 -ne $null) { Write-Host " $OpcionMenu10" -Fore Gray }
     if ($OpcionMenu11 -ne $null) { Write-Host " $OpcionMenu11" -Fore Gray }
     if ($OpcionMenu12 -ne $null) { Write-Host " $OpcionMenu12" -Fore Gray }
+    if ($OpcionMenu13 -ne $null) { Write-Host " $OpcionMenu13" -Fore Gray }
     
     [int]$OpcionMenu = Read-Host -Prompt "`n Tipeá una opción y presioná Enter"
     #Clear-Host
@@ -83,23 +84,24 @@ function Menu ($MenuNumero, $MenuCierra, $NombreMenu, $NombreFuncionMenu, $Opcio
         Invoke-Expression $NombreFuncionMenu
     } else {
         if ($OpcionMenu -eq $MenuNumero) { Invoke-Expression $MenuFuncion1 }
-        if ($OpcionMenu -eq ($MenuNumero + "1") ) { Invoke-Expression $MenuFuncion2 }
-        if ($OpcionMenu -eq ($MenuNumero + "2") ) { Invoke-Expression $MenuFuncion3 }   
-        if ($OpcionMenu -eq ($MenuNumero + "3") ) { Invoke-Expression $MenuFuncion4 } 
-        if ($OpcionMenu -eq ($MenuNumero + "4") ) { Invoke-Expression $MenuFuncion5 } 
-        if ($OpcionMenu -eq ($MenuNumero + "5") ) { Invoke-Expression $MenuFuncion6 } 
-        if ($OpcionMenu -eq ($MenuNumero + "6") ) { Invoke-Expression $MenuFuncion7 } 
-        if ($OpcionMenu -eq ($MenuNumero + "7") ) { Invoke-Expression $MenuFuncion8 }
-        if ($OpcionMenu -eq ($MenuNumero + "8") ) { Invoke-Expression $MenuFuncion9 } 
-        if ($OpcionMenu -eq ($MenuNumero + "9") ) { Invoke-Expression $MenuFuncion10 }
-        if ($OpcionMenu -eq ($MenuNumero + "10") ) { Invoke-Expression $MenuFuncion11 }
-        if ($OpcionMenu -eq ($MenuNumero + "11") ) { Invoke-Expression $MenuFuncion12 }
+        if ($OpcionMenu -eq ($MenuNumero + "1")) { Invoke-Expression $MenuFuncion2 }
+        if ($OpcionMenu -eq ($MenuNumero + "2")) { Invoke-Expression $MenuFuncion3 }   
+        if ($OpcionMenu -eq ($MenuNumero + "3")) { Invoke-Expression $MenuFuncion4 } 
+        if ($OpcionMenu -eq ($MenuNumero + "4")) { Invoke-Expression $MenuFuncion5 } 
+        if ($OpcionMenu -eq ($MenuNumero + "5")) { Invoke-Expression $MenuFuncion6 } 
+        if ($OpcionMenu -eq ($MenuNumero + "6")) { Invoke-Expression $MenuFuncion7 } 
+        if ($OpcionMenu -eq ($MenuNumero + "7")) { Invoke-Expression $MenuFuncion8 }
+        if ($OpcionMenu -eq ($MenuNumero + "8")) { Invoke-Expression $MenuFuncion9 } 
+        if ($OpcionMenu -eq ($MenuNumero + "9")) { Invoke-Expression $MenuFuncion10 }
+        if ($OpcionMenu -eq ($MenuNumero + "10")) { Invoke-Expression $MenuFuncion11 }
+        if ($OpcionMenu -eq ($MenuNumero + "11")) { Invoke-Expression $MenuFuncion12 }
+        if ($OpcionMenu -eq ($MenuNumero + "12")) { Invoke-Expression $MenuFuncion13 }
     }
 }
 
 # Menú principal, muestra idiomas
 function MENU_PRINCIPAL {
-    Menu 1 4 "`n Menú principal`n ==============" MENU_PRINCIPAL `
+    Menu 1 4 "`n Menú selección de idioma`n ========================" MENU_PRINCIPAL `
         "1. Cambiar de inglés a español" MENU_ENG_A_SPA_PRINCIPAL `
         "2. Cambiar de español a inglés" MENU_SPA_A_ENG_PRINCIPAL `
         "3. Salir" MENU_SALIR `
@@ -108,30 +110,32 @@ function MENU_PRINCIPAL {
 
 # Menú inglés a español
 function MENU_ENG_A_SPA_PRINCIPAL {
-    Menu 1 9 "`n Cambiar de inglés a español`n ===========================" MENU_ENG_A_SPA_PRINCIPAL `
-        "1. Adobe 2023" MENU_ADOBE_ENG_A_SPA `
-        "2. Adobe 2022" MENU_ADOBE_ENG_A_SPA `
-        "3. Adobe 2021" MENU_ADOBE_ENG_A_SPA `
-        "4. Adobe 2020" MENU_ADOBE_ENG_A_SPA `
-        "5. Adobe 2019" MENU_ADOBE_ENG_A_SPA `
-        "6. Adobe 2018" MENU_ADOBE_ENG_A_SPA `
-        "7. Menú selección de idioma" MENU_PRINCIPAL `
-        "8. Salir" MENU_SALIR `
-        "9. Ayuda" MENU_AYUDA
+    Menu 1 10 "`n Cambiar de inglés a español`n ===========================" MENU_ENG_A_SPA_PRINCIPAL `
+        "1. Adobe 2024" MENU_ADOBE_ENG_A_SPA `
+        "2. Adobe 2023" MENU_ADOBE_ENG_A_SPA `
+        "3. Adobe 2022" MENU_ADOBE_ENG_A_SPA `
+        "4. Adobe 2021" MENU_ADOBE_ENG_A_SPA `
+        "5. Adobe 2020" MENU_ADOBE_ENG_A_SPA `
+        "6. Adobe 2019" MENU_ADOBE_ENG_A_SPA `
+        "7. Adobe 2018" MENU_ADOBE_ENG_A_SPA `
+        "8. Menú selección de idioma" MENU_PRINCIPAL `
+        "9. Salir" MENU_SALIR `
+        "10. Ayuda" MENU_AYUDA
 }
 
 # Menú español a inglés
 function MENU_SPA_A_ENG_PRINCIPAL {
-    Menu 1 9 "`n Cambiar de español a inglés`n ===========================" MENU_SPA_A_ENG_PRINCIPAL `
-        "1. Adobe 2023" MENU_ADOBE_SPA_A_ENG `
-        "2. Adobe 2022" MENU_ADOBE_SPA_A_ENG `
-        "3. Adobe 2021" MENU_ADOBE_SPA_A_ENG `
-        "4. Adobe 2020" MENU_ADOBE_SPA_A_ENG `
-        "5. Adobe 2019" MENU_ADOBE_SPA_A_ENG `
-        "6. Adobe 2018" MENU_ADOBE_SPA_A_ENG `
-        "7. Menú selección de idioma" MENU_PRINCIPAL `
-        "8. Salir" MENU_SALIR `
-        "9. Ayuda" MENU_AYUDA
+    Menu 1 10 "`n Cambiar de español a inglés`n ===========================" MENU_SPA_A_ENG_PRINCIPAL `
+        "1. Adobe 2024" MENU_ADOBE_SPA_A_ENG `
+        "2. Adobe 2023" MENU_ADOBE_SPA_A_ENG `
+        "3. Adobe 2022" MENU_ADOBE_SPA_A_ENG `
+        "4. Adobe 2021" MENU_ADOBE_SPA_A_ENG `
+        "5. Adobe 2020" MENU_ADOBE_SPA_A_ENG `
+        "6. Adobe 2019" MENU_ADOBE_SPA_A_ENG `
+        "7. Adobe 2018" MENU_ADOBE_SPA_A_ENG `
+        "8. Menú selección de idioma" MENU_PRINCIPAL `
+        "9. Salir" MENU_SALIR `
+        "10. Ayuda" MENU_AYUDA
 }
 
 # Get tamaño archivo de descarga (https://chat.openai.com/chat/75b0de7b-17a3-47bd-9e60-d1639e8c8b58)
@@ -171,38 +175,42 @@ function RUTA_INSTALACION {
 # Menú Adobe inglés a español
 function MENU_ADOBE_ENG_A_SPA {
     switch ($OpcionMenu) {
-        1 { $VersionAdobe = 2023
+        1 { $VersionAdobe = 2024
             $FreezeOpcionMenu = 1
             break
         }
-        2 { $VersionAdobe = 2022
+        2 { $VersionAdobe = 2023
             $FreezeOpcionMenu = 2
             break
         }
-        3 { $VersionAdobe = 2021
+        3 { $VersionAdobe = 2022
             $FreezeOpcionMenu = 3
             break
         }
-        4 { $VersionAdobe = 2020
+        4 { $VersionAdobe = 2021
             $FreezeOpcionMenu = 4
             break
         }
-        5 { $VersionAdobe = 2019
+        5 { $VersionAdobe = 2020
             $FreezeOpcionMenu = 5
             break
         }
-        6 { $VersionAdobe = 2018
+        6 { $VersionAdobe = 2019
             $FreezeOpcionMenu = 6
             break
         }
+        7 { $VersionAdobe = 2018
+            $FreezeOpcionMenu = 7
+            break
+        }
         default {
-            $VersionAdobe = 2023
+            $VersionAdobe = 2024
             $FreezeOpcionMenu = 1
         }
     }
     #Write-Host "usuario tipeó" $VersionAdobe "**DEBUG**" -Fore Red;
     
-    Menu 1 12 "`n Adobe $VersionAdobe`n ========== $AlertaCambio" MENU_ADOBE_ENG_A_SPA `
+    Menu 1 13 "`n Adobe $VersionAdobe`n ========== $AlertaCambio" MENU_ADOBE_ENG_A_SPA `
         "1. After Effects" MENU_AE_ENG_A_SPA `
         "2. Premiere Pro" MENU_PPRO_ENG_A_SPA `
         "3. Audition" MENU_AUDI_ENG_A_SPA `
@@ -212,46 +220,51 @@ function MENU_ADOBE_ENG_A_SPA {
         "7. Animate" MENU_ANI_ENG_A_SPA `
         "8. Illustrator" MENU_ILU_ENG_A_SPA `
         "9. InCopy" MENU_INC_ENG_A_SPA `
-        "10. Menú selección de idioma" MENU_PRINCIPAL `
-        "11. Salir" MENU_SALIR `
-        "12. Ayuda" MENU_AYUDA
+        "10. Character Animator" MENU_CA_ENG_A_SPA `
+        "11. Menú selección de idioma" MENU_PRINCIPAL `
+        "12. Salir" MENU_SALIR `
+        "13. Ayuda" MENU_AYUDA
 }
 
 # Menú Adobe español a inglés
 function MENU_ADOBE_SPA_A_ENG {
     switch ($OpcionMenu) {
-        1 { $VersionAdobe = 2023
+        1 { $VersionAdobe = 2024
             $FreezeOpcionMenu = 1
             break
         }
-        2 { $VersionAdobe = 2022
+        2 { $VersionAdobe = 2023
             $FreezeOpcionMenu = 2
             break
         }
-        3 { $VersionAdobe = 2021
+        3 { $VersionAdobe = 2022
             $FreezeOpcionMenu = 3
             break
         }
-        4 { $VersionAdobe = 2020
+        4 { $VersionAdobe = 2021
             $FreezeOpcionMenu = 4
             break
         }
-        5 { $VersionAdobe = 2019
+        5 { $VersionAdobe = 2020
             $FreezeOpcionMenu = 5
             break
         }
-        6 { $VersionAdobe = 2018
+        6 { $VersionAdobe = 2019
             $FreezeOpcionMenu = 6
             break
         }
+        7 { $VersionAdobe = 2018
+            $FreezeOpcionMenu = 7
+            break
+        }
         default {
-            $VersionAdobe = 2023
+            $VersionAdobe = 2024
             $FreezeOpcionMenu = 1
         }
     }
     #Write-Host "usuario tipeó" $VersionAdobe "**DEBUG**" -Fore Red;
 
-    Menu 1 12 "`n Adobe $VersionAdobe`n ========== $AlertaCambio" MENU_ADOBE_SPA_A_ENG `
+    Menu 1 13 "`n Adobe $VersionAdobe`n ========== $AlertaCambio" MENU_ADOBE_SPA_A_ENG `
         "1. After Effects" MENU_AE_SPA_A_ENG `
         "2. Premiere Pro" MENU_PPRO_SPA_A_ENG `
         "3. Audition" MENU_AUDI_SPA_A_ENG `
@@ -261,9 +274,10 @@ function MENU_ADOBE_SPA_A_ENG {
         "7. Animate" MENU_ANI_SPA_A_ENG `
         "8. Illustrator" MENU_ILU_SPA_A_ENG `
         "9. InCopy" MENU_INC_SPA_A_ENG `
-        "10. Menú selección de idioma" MENU_PRINCIPAL `
-        "11. Salir" MENU_SALIR `
-        "12. Ayuda" MENU_AYUDA
+        "10. Character Animator" MENU_CA_SPA_A_ENG `
+        "11. Menú selección de idioma" MENU_PRINCIPAL `
+        "12. Salir" MENU_SALIR `
+        "13. Ayuda" MENU_AYUDA
 }
 
 # Menú After Effects, inglés a español
@@ -530,7 +544,7 @@ function MENU_IND_ENG_A_SPA {
                 Start-Sleep -Seconds 5
             }
             # Hay conexión
-            #Write-Host $Descargando "(~97 KB)" -Fore Yellow ************
+            #Write-Host $Descargando "(~97 KB)" -Fore Yellow
             TAMANIO_DESCARGA -Url $SourceDescarga
             $null = New-Item -Path $DestinoDescarga -ItemType Directory -Force
             Invoke-WebRequest -Uri $SourceDescarga -OutFile "$DestinoDescarga\$LocaleEsEs.zip"
@@ -1222,6 +1236,82 @@ function MENU_INC_SPA_A_ENG {
 
     # Mantiene última versión elegida por el usuario en menú Adobe
     $OpcionMenu = $FreezeOpcionMenu
+
+    # Vuelve al menú
+    MENU_ADOBE_SPA_A_ENG
+}
+
+# Menú Character Animator, inglés a español
+function MENU_CA_ENG_A_SPA {
+    
+    $RutaInstalCa = "Adobe Character Animator $VersionAdobe"
+    $RutaInstalacion = RUTA_INSTALACION
+    #Write-Host "La ruta que se usará es: [$RutaInstalacion]" **DEBUG**
+    
+    if ($RutaInstalacion -eq $RutaInstalAdobe) {
+        $RutaInstalacion = "$RutaInstalAdobe\$RutaInstalCa"
+    } elseif ($RutaInstalacion -ne $RutaInstalAdobe) {
+        $RutaInstalacion = "$RutaInstalacion"
+    }
+
+    $Idioma = Get-Content "$RutaInstalacion\Support Files\AMT\application.xml" | Where-Object {($_ -match $XmlEnUs) -or ($_ -match $XmlEnGb)}
+    $Contenido = Get-Content "$RutaInstalacion\Support Files\AMT\application.xml"
+
+    if ($Idioma -match $XmlEnUs) {
+        $Contenido.replace($XmlEnUs,$XmlEsEs) | Set-Content "$RutaInstalacion\Support Files\AMT\application.xml"
+        Write-Host $CambioEngSpa -Fore DarkGreen
+        Start-Sleep -Seconds 1
+    } elseif ($Idioma -match $XmlEnGb) {
+        $Contenido.replace($XmlEnGb,$XmlEsEs) | Set-Content "$RutaInstalacion\Support Files\AMT\application.xml"
+        Write-Host $CambioEngSpa -Fore DarkGreen
+        Start-Sleep -Seconds 1
+    } else {
+        Write-Host $NoCambio -Fore Red
+        Write-Host $Razones -Fore Yellow
+        Start-Sleep -Seconds 1
+    }
+    
+    # Mantiene última versión elegida por el usuario en menú Adobe
+    $OpcionMenu = $FreezeOpcionMenu
+    #Write-Host "version elegida antes de salir del menu **DEBUG** " $OpcionMenu -Fore Yellow;
+
+    # Vuelve al menú
+    MENU_ADOBE_ENG_A_SPA
+}
+
+# Menú Character Animator, español a inglés
+function MENU_CA_SPA_A_ENG {
+
+    $RutaInstalCa = "Adobe Character Animator $VersionAdobe"
+    $RutaInstalacion = RUTA_INSTALACION
+    #Write-Host "La ruta que se usará es: [$RutaInstalacion]" **DEBUG**
+    
+    if ($RutaInstalacion -eq $RutaInstalAdobe) {
+        $RutaInstalacion = "$RutaInstalAdobe\$RutaInstalCa"
+    } elseif ($RutaInstalacion -ne $RutaInstalAdobe) {
+        $RutaInstalacion = "$RutaInstalacion"
+    }
+
+    $Idioma = Get-Content "$RutaInstalacion\Support Files\AMT\application.xml" | Where-Object {($_ -match $XmlEsEs) -or ($_ -match $XmlEsMx)}
+    $Contenido = Get-Content "$RutaInstalacion\Support Files\AMT\application.xml"
+
+    if ($Idioma -match $XmlEsEs) {
+        $Contenido.replace($XmlEsEs,$XmlEnUs) | Set-Content "$RutaInstalacion\Support Files\AMT\application.xml"
+        Write-Host $CambioSpaEng -Fore DarkGreen
+        Start-Sleep -Seconds 1
+    } elseif ($Idioma -match $XmlEsMx) {
+        $Contenido.replace($XmlEsMx,$XmlEnUs) | Set-Content "$RutaInstalacion\Support Files\AMT\application.xml"
+        Write-Host $CambioSpaEng -Fore DarkGreen
+        Start-Sleep -Seconds 1
+    } else {
+        Write-Host $NoCambio -Fore Red
+        Write-Host $Razones -Fore Yellow
+        Start-Sleep -Seconds 1
+    }
+    
+    # Mantiene última versión elegida por el usuario en menú Adobe
+    $OpcionMenu = $FreezeOpcionMenu
+    #Write-Host "version elegida antes de salir del menu **DEBUG** " $OpcionMenu -Fore Yellow;
 
     # Vuelve al menú
     MENU_ADOBE_SPA_A_ENG
