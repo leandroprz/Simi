@@ -1,4 +1,4 @@
-﻿# Simi v1.5
+﻿# Simi v1.6
 # Cambiá el idioma de los programas de Adobe sin reinstalarlos
 # https://leandroperez.art/tienda/productos-gratuitos/simi-cambia-idioma-adobe-sin-reinstalar/
 # © Leandro Pérez
@@ -6,15 +6,11 @@
 # Versión mínima requerida de PowerShell
 #Requires -Version 5.1
 
-# Types
-#Add-Type -AssemblyName System.IO.Compression.FileSystem
-
 # Variables versiones y paths
 $script:VersionAdobe
 $script:FreezeOpcionMenu
 $script:RutaInstalAlt
 $script:RutaInstalDefault
-#$script:Enc = [System.Text.Encoding]::GetEncoding(29001) #29001, x-Europa, Europa (https://stackoverflow.com/a/60235134/5204005)
 
 # Variables idiomas
 $script:XmlEnUs = '<Data key="installedLanguages">en_US</Data>'
@@ -30,49 +26,24 @@ $script:LocaleEsMx = 'es_MX'
 
 # Locales
 $script:UrlLocales = "https://github.com/leandroprz/Simi/raw/main/locales"
-#$script:UrlLocales = "http://localhost/lp/simi"
-#$script:UrlLocales = "https://leandroperez.art/go/simi/locales"
+#$script:UrlLocales = "https://lp.local/simi" **DEBUG**
 
 # Variables mensajes
-$script:CambioEngSpa = "`n Se cambió el idioma de inglés a español correctamente.`n"
-$script:CambioSpaEng = "`n Se cambió el idioma de español a inglés correctamente.`n"
+$script:CambioEngSpa = "`n Se cambió el idioma de inglés a español correctamente."
+$script:CambioSpaEng = "`n Se cambió el idioma de español a inglés correctamente."
 $script:AlertaCambio = "`n`n **¡Cerrá el programa de Adobe antes de cambiar el idioma!**"
 $script:NoCambio = "`n ¡No se pudo cambiar el idioma!"
 $script:Cambiando = "`n Instalando idioma..."
 $script:Razones = "`n Puede ser por diferentes razones:
-                    `n - El programa de Adobe no está instalado en la ruta por defecto ('C:\Archivos de programa' o 'C:\Program Files').
-                    `n - El programa de Adobe no se instaló usando la aplicación Creative Cloud.
-                    `n - La versión de Adobe que elegiste no está instalada en tu computadora.
-                    `n - Ya tenés instalado el idioma al que querés cambiar."
+ - El programa de Adobe no está instalado en la ruta por defecto [$Env:Programfiles\Adobe].
+ - El programa de Adobe no se instaló usando la aplicación Creative Cloud.
+ - La versión de Adobe que elegiste no está instalada en tu computadora.
+ - Ya tenés instalado el idioma seleccionado."
 $script:CambioPs = "`n ¡Listo! Ya podés elegir el nuevo idioma de Photoshop desde el menú Editar > Preferencias > Interfaz."
 $script:ErrorCambioPs = "`n Ya tenés instalado el idioma seleccionado. Lo podés cambiar desde el menú Editar > Preferencias > Interfaz."
 $script:ErrorCambioYaInstalado = " - Ya tenés instalado el idioma seleccionado."
 $script:Descargando = "`n Descargando archivo de idioma..."
 $script:SinConexion = "`n No es posible conectarse a la página de descarga de idiomas. Intentando nuevamente en 5s..."
-
-# Descomprime archivos (https://gist.github.com/nachivpn/3e53dd36120877d70aee)
-# Uso: Unzip -zipfile "$zip" -outdir "$dir" 
-# function Unzip($zipfile, $outdir) {
-#     Add-Type -AssemblyName System.IO.Compression.FileSystem
-#     $archive = [System.IO.Compression.ZipFile]::OpenRead($zipfile)
-#     foreach ($entry in $archive.Entries) {
-#         $entryTargetFilePath = [System.IO.Path]::Combine($outdir, $entry.FullName)
-#         $entryDir = [System.IO.Path]::GetDirectoryName($entryTargetFilePath)
-        
-#         #Ensure the directory of the archive entry exists
-#         if(!(Test-Path $entryDir )){
-#             New-Item -ItemType Directory -Path $entryDir | Out-Null 
-#         }
-        
-#         #If the entry is not a directory entry, then extract entry
-#         if(!$entryTargetFilePath.EndsWith("\") -And !$entryTargetFilePath.EndsWith("/")) {
-#             [System.IO.Compression.ZipFileExtensions]::ExtractToFile($entry, $entryTargetFilePath, $true);
-#         }
-#     }
-# }
-
-
-#[System.IO.Compression.ZipFile]::ExtractToDirectory( "$RutaInstalDefault\$LocaleEsEs.zip", "$RutaInstalDefault\$LocaleEsEs", $Enc, $true )
 
 # Fix for $PSScriptRoot when converting to exe (https://stackoverflow.com/a/60122064/5204005)
 $script:ScriptDir = if (-not $PSScriptRoot) {  # $PSScriptRoot not defined?
@@ -80,15 +51,14 @@ $script:ScriptDir = if (-not $PSScriptRoot) {  # $PSScriptRoot not defined?
     # [environment]::GetCommandLineArgs()[0],
     # resolve it to a full path with Convert-Path, then get its directory path
     Split-Path -Parent (Convert-Path ([environment]::GetCommandLineArgs()[0])) 
-  } 
-  else {
-    # Use the automatic variable.
-    $PSScriptRoot 
-  }
-
+    }
+    else {
+        # Use the automatic variable.
+        $PSScriptRoot 
+    }
 
 # Menú con opciones
-function Menu ($MenuNumero, $MenuCierra, $NombreMenu, $NombreFuncionMenu, $OpcionMenu1, $MenuFuncion1, $OpcionMenu2, $MenuFuncion2, $OpcionMenu3, $MenuFuncion3, $OpcionMenu4, $MenuFuncion4, $OpcionMenu5, $MenuFuncion5, $OpcionMenu6, $MenuFuncion6, $OpcionMenu7, $MenuFuncion7, $OpcionMenu8, $MenuFuncion8, $OpcionMenu9, $MenuFuncion9, $OpcionMenu10, $MenuFuncion10, $OpcionMenu11, $MenuFuncion11) {
+function Menu ($MenuNumero, $MenuCierra, $NombreMenu, $NombreFuncionMenu, $OpcionMenu1, $MenuFuncion1, $OpcionMenu2, $MenuFuncion2, $OpcionMenu3, $MenuFuncion3, $OpcionMenu4, $MenuFuncion4, $OpcionMenu5, $MenuFuncion5, $OpcionMenu6, $MenuFuncion6, $OpcionMenu7, $MenuFuncion7, $OpcionMenu8, $MenuFuncion8, $OpcionMenu9, $MenuFuncion9, $OpcionMenu10, $MenuFuncion10, $OpcionMenu11, $MenuFuncion11, $OpcionMenu12, $MenuFuncion12) {
 
     Write-Host "`n$NombreMenu`n" -Fore Gray
     if ($OpcionMenu1 -ne $null) { Write-Host " $OpcionMenu1" -Fore Gray }
@@ -102,6 +72,7 @@ function Menu ($MenuNumero, $MenuCierra, $NombreMenu, $NombreFuncionMenu, $Opcio
     if ($OpcionMenu9 -ne $null) { Write-Host " $OpcionMenu9" -Fore Gray }
     if ($OpcionMenu10 -ne $null) { Write-Host " $OpcionMenu10" -Fore Gray }
     if ($OpcionMenu11 -ne $null) { Write-Host " $OpcionMenu11" -Fore Gray }
+    if ($OpcionMenu12 -ne $null) { Write-Host " $OpcionMenu12" -Fore Gray }
     
     [int]$OpcionMenu = Read-Host -Prompt "`n Tipeá una opción y presioná Enter"
         
@@ -121,12 +92,13 @@ function Menu ($MenuNumero, $MenuCierra, $NombreMenu, $NombreFuncionMenu, $Opcio
         if ($OpcionMenu -eq ($MenuNumero + "8") ) { Invoke-Expression $MenuFuncion9 } 
         if ($OpcionMenu -eq ($MenuNumero + "9") ) { Invoke-Expression $MenuFuncion10 }
         if ($OpcionMenu -eq ($MenuNumero + "10") ) { Invoke-Expression $MenuFuncion11 }
+        if ($OpcionMenu -eq ($MenuNumero + "11") ) { Invoke-Expression $MenuFuncion12 }
     }
 }
 
 # Menú principal, muestra idiomas
 function MENU_PRINCIPAL {
-    Write-Host "`n`n Simi v1.5 - © Leandro Pérez`n Cambiá el idioma de Adobe sin reinstalar los programas" -Fore DarkGray
+    Write-Host "`n`n Simi v1.6 - © Leandro Pérez`n Cambiá el idioma de Adobe sin reinstalar los programas" -Fore DarkGray
     Menu 1 4 "`n Menú principal`n ==============" MENU_PRINCIPAL `
         "1. Cambiar de inglés a español" MENU_ENG_A_SPA_PRINCIPAL `
         "2. Cambiar de español a inglés" MENU_SPA_A_ENG_PRINCIPAL `
@@ -134,7 +106,7 @@ function MENU_PRINCIPAL {
         "4. Ayuda" MENU_AYUDA
 }
 
-# Menú principal inglés a español
+# Menú inglés a español
 function MENU_ENG_A_SPA_PRINCIPAL {
     Menu 1 9 "`n Cambiar de inglés a español`n ===========================" MENU_ENG_A_SPA_PRINCIPAL `
         "1. Adobe 2023" MENU_ADOBE_ENG_A_SPA `
@@ -148,7 +120,7 @@ function MENU_ENG_A_SPA_PRINCIPAL {
         "9. Ayuda" MENU_AYUDA
 }
 
-# Menú principal español a inglés
+# Menú español a inglés
 function MENU_SPA_A_ENG_PRINCIPAL {
     Menu 1 9 "`n Cambiar de español a inglés`n ===========================" MENU_SPA_A_ENG_PRINCIPAL `
         "1. Adobe 2023" MENU_ADOBE_SPA_A_ENG `
@@ -207,9 +179,9 @@ function MENU_ADOBE_ENG_A_SPA {
             $FreezeOpcionMenu = 1
         }
     }
-    #Write-Host "usuario tipeó" $VersionAdobe "***DEBUG***" -Fore Red;
+    #Write-Host "usuario tipeó" $VersionAdobe "**DEBUG**" -Fore Red;
     
-    Menu 1 11 "`n Adobe $VersionAdobe`n ========== $AlertaCambio" MENU_ADOBE_ENG_A_SPA `
+    Menu 1 12 "`n Adobe $VersionAdobe`n ========== $AlertaCambio" MENU_ADOBE_ENG_A_SPA `
         "1. After Effects" MENU_AE_ENG_A_SPA `
         "2. Premiere Pro" MENU_PPRO_ENG_A_SPA `
         "3. Audition" MENU_AUDI_ENG_A_SPA `
@@ -218,9 +190,10 @@ function MENU_ADOBE_ENG_A_SPA {
         "6. Photoshop" MENU_PS_ENG_A_SPA `
         "7. Animate" MENU_ANI_ENG_A_SPA `
         "8. Illustrator" MENU_ILU_ENG_A_SPA `
-        "9. Menú selección de idioma" MENU_PRINCIPAL `
-        "10. Salir" MENU_SALIR `
-        "11. Ayuda" MENU_AYUDA
+        "9. InCopy" MENU_INC_ENG_A_SPA `
+        "10. Menú selección de idioma" MENU_PRINCIPAL `
+        "11. Salir" MENU_SALIR `
+        "12. Ayuda" MENU_AYUDA
 }
 
 # Menú Adobe español a inglés
@@ -255,9 +228,9 @@ function MENU_ADOBE_SPA_A_ENG {
             $FreezeOpcionMenu = 1
         }
     }
-    #Write-Host "usuario tipeó" $VersionAdobe "***DEBUG***" -Fore Red;
+    #Write-Host "usuario tipeó" $VersionAdobe "**DEBUG**" -Fore Red;
 
-    Menu 1 11 "`n Adobe $VersionAdobe`n ========== $AlertaCambio" MENU_ADOBE_SPA_A_ENG `
+    Menu 1 12 "`n Adobe $VersionAdobe`n ========== $AlertaCambio" MENU_ADOBE_SPA_A_ENG `
         "1. After Effects" MENU_AE_SPA_A_ENG `
         "2. Premiere Pro" MENU_PPRO_SPA_A_ENG `
         "3. Audition" MENU_AUDI_SPA_A_ENG `
@@ -266,9 +239,10 @@ function MENU_ADOBE_SPA_A_ENG {
         "6. Photoshop" MENU_PS_SPA_A_ENG `
         "7. Animate" MENU_ANI_SPA_A_ENG `
         "8. Illustrator" MENU_ILU_SPA_A_ENG `
-        "9. Menú selección de idioma" MENU_PRINCIPAL `
-        "10. Salir" MENU_SALIR `
-        "11. Ayuda" MENU_AYUDA
+        "9. InCopy" MENU_INC_SPA_A_ENG `
+        "10. Menú selección de idioma" MENU_PRINCIPAL `
+        "11. Salir" MENU_SALIR `
+        "12. Ayuda" MENU_AYUDA
 }
 
 # Menú After Effects, inglés a español
@@ -305,7 +279,7 @@ function MENU_AE_ENG_A_SPA {
     
     # Mantiene última versión elegida por el usuario en menú Adobe
     $OpcionMenu = $FreezeOpcionMenu
-    #Write-Host "version elegida antes de salir del menu ***DEBUG*** " $OpcionMenu -Fore Yellow;
+    #Write-Host "version elegida antes de salir del menu **DEBUG** " $OpcionMenu -Fore Yellow;
 
     # Vuelve al menú
     MENU_ADOBE_ENG_A_SPA
@@ -335,7 +309,7 @@ function MENU_AE_SPA_A_ENG {
     
     # Mantiene última versión elegida por el usuario en menú Adobe
     $OpcionMenu = $FreezeOpcionMenu
-    #Write-Host "version elegida antes de salir del menu ***DEBUG*** " $OpcionMenu -Fore Yellow;
+    #Write-Host "version elegida antes de salir del menu **DEBUG** " $OpcionMenu -Fore Yellow;
 
     # Vuelve al menú
     MENU_ADOBE_SPA_A_ENG
@@ -365,7 +339,7 @@ function MENU_PPRO_ENG_A_SPA {
 
     # Mantiene última versión elegida por el usuario en menú Adobe
     $OpcionMenu = $FreezeOpcionMenu
-    #Write-Host "version elegida antes de salir del menu ***DEBUG*** " $OpcionMenu -Fore Yellow;
+    #Write-Host "version elegida antes de salir del menu **DEBUG** " $OpcionMenu -Fore Yellow;
 
     # Vuelve al menú
     MENU_ADOBE_ENG_A_SPA
@@ -395,7 +369,7 @@ function MENU_PPRO_SPA_A_ENG {
 
     # Mantiene última versión elegida por el usuario en menú Adobe
     $OpcionMenu = $FreezeOpcionMenu
-    #Write-Host "version elegida antes de salir del menu ***DEBUG*** " $OpcionMenu -Fore Yellow;
+    #Write-Host "version elegida antes de salir del menu **DEBUG** " $OpcionMenu -Fore Yellow;
 
     # Vuelve al menú
     MENU_ADOBE_SPA_A_ENG
@@ -425,7 +399,7 @@ function MENU_AUDI_ENG_A_SPA {
 
     # Mantiene última versión elegida por el usuario en menú Adobe
     $OpcionMenu = $FreezeOpcionMenu
-    #Write-Host "version elegida antes de salir del menu ***DEBUG*** " $OpcionMenu -Fore Yellow;
+    #Write-Host "version elegida antes de salir del menu **DEBUG** " $OpcionMenu -Fore Yellow;
 
     # Vuelve al menú
     MENU_ADOBE_ENG_A_SPA
@@ -455,7 +429,7 @@ function MENU_AUDI_SPA_A_ENG {
 
     # Mantiene última versión elegida por el usuario en menú Adobe
     $OpcionMenu = $FreezeOpcionMenu
-    #Write-Host "version elegida antes de salir del menu ***DEBUG*** " $OpcionMenu -Fore Yellow;
+    #Write-Host "version elegida antes de salir del menu **DEBUG** " $OpcionMenu -Fore Yellow;
 
     # Vuelve al menú
     MENU_ADOBE_SPA_A_ENG
@@ -464,73 +438,116 @@ function MENU_AUDI_SPA_A_ENG {
 # Menú InDesign, inglés a español
 function MENU_IND_ENG_A_SPA {
 
-    $RutaInstalDefault1 = ".\Adobe\Adobe InDesign $VersionAdobe\Presets\InDesign Shortcut Sets"
-    $RutaInstalDefault2 = ".\Adobe\Adobe InDesign $VersionAdobe\Presets\InDesign_Workspaces"
+    $RutaInstalDefault1 = "Adobe\Adobe InDesign $VersionAdobe\AMT"
+    $RutaInstalDefault2 = "$Env:Programfiles\Adobe\Adobe InDesign $VersionAdobe"
+    $RutaInstalDefault3 = "$Env:Programfiles\Adobe\Adobe InDesign $VersionAdobe\Presets\InDesign_Workspaces"
+    $SourceDescarga = "$UrlLocales/ind/$VersionAdobe/$LocaleEsEs.zip"
+    $DestinoDescarga = "$ScriptDir\idiomas_simi\ind\$VersionAdobe"
 
-    cd "$Env:Programfiles\$RutaInstalDefault1"
+    $IdiomaEng = Get-Content "$Env:Programfiles\$RutaInstalDefault1\application.xml" | Where-Object {($_ -match $XmlEnUs) -or ($_ -match $XmlEnGb)}
+    $IdiomaSpa = Get-Content "$Env:Programfiles\$RutaInstalDefault1\application.xml" | Where-Object {($_ -match $XmlEsEs) -or ($_ -match $XmlEsMx)}
+    $Contenido = Get-Content "$Env:Programfiles\$RutaInstalDefault1\application.xml"
 
-    if (Test-Path -Path $LocaleEnUs -PathType Container) {
-        Rename-Item -Path $LocaleEnUs -NewName $LocaleEsEs
-    } elseif (Test-Path -Path $LocaleEnGb -PathType Container) {
-        Rename-Item -Path $LocaleEnGb -NewName $LocaleEsEs
-    }
-    
-    cd "$Env:Programfiles\$RutaInstalDefault2"
+    if ( ($IdiomaEng -match $XmlEnUs) -or ($IdiomaEng -match $XmlEnGb) ) {
 
-    if (Test-Path -Path $LocaleEnUs -PathType Container) {
-        Rename-Item -Path $LocaleEnUs -NewName $LocaleEsEs
+        if ( (($IdiomaEng -match $XmlEnUs) -and (Test-Path -Path "$RutaInstalDefault3\$LocaleEnUs" -PathType Container)) ) {
+            $Contenido.replace($XmlEnUs,$XmlEsEs) | Set-Content "$Env:Programfiles\$RutaInstalDefault1\application.xml"
+        } elseif ( (($IdiomaEng -match $XmlEnGb) -and (Test-Path -Path "$RutaInstalDefault3\$LocaleEnGb" -PathType Container)) ) {
+            $Contenido.replace($XmlEnGb,$XmlEsEs) | Set-Content "$Env:Programfiles\$RutaInstalDefault1\application.xml"
+        }
+
+        if ( (Test-Path -Path "$DestinoDescarga\$LocaleEsEs.zip" -PathType Leaf) -or (Test-Path -Path "$DestinoDescarga\$LocaleEsMx.zip" -PathType Leaf) ) {
+            Copy-Item -Path "$DestinoDescarga\$LocaleEsEs.zip" -Destination "$RutaInstalDefault2\$LocaleEsEs.zip" -Force
+        } else {
+            # Chequea si hay conexión a Internet
+            while (!(Test-Connection -computer google.com -count 1 -quiet)) {
+                Write-Host $SinConexion -Fore Red
+                Start-Sleep -Seconds 5
+            }
+            # Hay conexión
+            Write-Host $Descargando "(~97 KB)" -Fore Yellow
+            $null = New-Item -Path $DestinoDescarga -ItemType Directory -Force
+            Invoke-WebRequest -Uri $SourceDescarga -OutFile "$DestinoDescarga\$LocaleEsEs.zip"
+            Copy-Item -Path "$DestinoDescarga\$LocaleEsEs.zip" -Destination "$RutaInstalDefault2\$LocaleEsEs.zip" -Force
+        }
+
+        Write-Host $Cambiando -Fore Yellow
+
+        $Shell = New-Object -com Shell.Application
+        $Shell.Namespace("$RutaInstalDefault2").copyhere($Shell.NameSpace("$RutaInstalDefault2\$LocaleEsEs.zip").Items(), 0x14)
+
+        Remove-Item "$RutaInstalDefault2\$LocaleEsEs.zip" -Force -ErrorAction SilentlyContinue
         Write-Host $CambioEngSpa -Fore DarkGreen
         Start-Sleep -Seconds 1
-    } elseif (Test-Path -Path $LocaleEnGb -PathType Container) {
-        Rename-Item -Path $LocaleEnGb -NewName $LocaleEsEs
-        Write-Host $CambioEngSpa -Fore DarkGreen
-        Start-Sleep -Seconds 1
-    } else {
+
+    } elseif ( ($IdiomaSpa -match $XmlEsEs) -or ($IdiomaSpa -match $XmlEsMx) ) {
         Write-Host $NoCambio -Fore Red
         Write-Host $Razones -Fore Yellow
+        #Write-Host $ErrorCambioYaInstalado -Fore Yellow
         Start-Sleep -Seconds 1
     }
 
     # Mantiene última versión elegida por el usuario en menú Adobe
     $OpcionMenu = $FreezeOpcionMenu
-    #Write-Host "version elegida antes de salir del menu ***DEBUG*** " $OpcionMenu -Fore Yellow;
+
     # Vuelve al menú
     MENU_ADOBE_ENG_A_SPA
 }
 
 # Menú InDesign, español a inglés
 function MENU_IND_SPA_A_ENG {
-    
-    $RutaInstalDefault1 = ".\Adobe\Adobe InDesign $VersionAdobe\Presets\InDesign Shortcut Sets"
-    $RutaInstalDefault2 = ".\Adobe\Adobe InDesign $VersionAdobe\Presets\InDesign_Workspaces"
 
-    cd "$Env:Programfiles\$RutaInstalDefault1"
+    $RutaInstalDefault1 = "Adobe\Adobe InDesign $VersionAdobe\AMT"
+    $RutaInstalDefault2 = "$Env:Programfiles\Adobe\Adobe InDesign $VersionAdobe"
+    $RutaInstalDefault3 = "$Env:Programfiles\Adobe\Adobe InDesign $VersionAdobe\Presets\InDesign_Workspaces"
+    $SourceDescarga = "$UrlLocales/ind/$VersionAdobe/$LocaleEnUs.zip"
+    $DestinoDescarga = "$ScriptDir\idiomas_simi\ind\$VersionAdobe"
 
-    if (Test-Path -Path $LocaleEsEs -PathType Container) {
-        Rename-Item -Path $LocaleEsEs -NewName $LocaleEnUs
-    } elseif (Test-Path -Path $LocaleEsMx -PathType Container) {
-        Rename-Item -Path $LocaleEsMx -NewName $LocaleEnUs
-    }
+    $IdiomaEng = Get-Content "$Env:Programfiles\$RutaInstalDefault1\application.xml" | Where-Object {($_ -match $XmlEnUs) -or ($_ -match $XmlEnGb)}
+    $IdiomaSpa = Get-Content "$Env:Programfiles\$RutaInstalDefault1\application.xml" | Where-Object {($_ -match $XmlEsEs) -or ($_ -match $XmlEsMx)}
+    $Contenido = Get-Content "$Env:Programfiles\$RutaInstalDefault1\application.xml"
 
-    cd "$Env:Programfiles\$RutaInstalDefault2"
+    if ( ($IdiomaSpa -match $XmlEsEs) -or ($IdiomaSpa -match $XmlEsMx) ) {
 
-    if (Test-Path -Path $LocaleEsEs -PathType Container) {
-        Rename-Item -Path $LocaleEsEs -NewName $LocaleEnUs
+        if ( (($IdiomaSpa -match $XmlEsEs) -and (Test-Path -Path "$RutaInstalDefault3\$LocaleEsEs" -PathType Container)) ) {
+            $Contenido.replace($XmlEsEs,$XmlEnUs) | Set-Content "$Env:Programfiles\$RutaInstalDefault1\application.xml"
+        } elseif ( (($IdiomaSpa -match $XmlEsMx) -and (Test-Path -Path "$RutaInstalDefault3\$LocaleEsMx" -PathType Container)) ) {
+            $Contenido.replace($XmlEsMx,$XmlEnUs) | Set-Content "$Env:Programfiles\$RutaInstalDefault1\application.xml"
+        }
+
+        if ( (Test-Path -Path "$DestinoDescarga\$LocaleEnUs.zip" -PathType Leaf) -or (Test-Path -Path "$DestinoDescarga\$LocaleEnGb.zip" -PathType Leaf) ) {
+            Copy-Item -Path "$DestinoDescarga\$LocaleEnUs.zip" -Destination "$RutaInstalDefault2\$LocaleEnUs.zip" -Force
+        } else {
+            # Chequea si hay conexión a Internet
+            while (!(Test-Connection -computer google.com -count 1 -quiet)) {
+                Write-Host $SinConexion -Fore Red
+                Start-Sleep -Seconds 5
+            }
+            # Hay conexión
+            Write-Host $Descargando "(~95 KB)" -Fore Yellow
+            $null = New-Item -Path $DestinoDescarga -ItemType Directory -Force
+            Invoke-WebRequest -Uri $SourceDescarga -OutFile "$DestinoDescarga\$LocaleEnUs.zip"
+            Copy-Item -Path "$DestinoDescarga\$LocaleEnUs.zip" -Destination "$RutaInstalDefault2\$LocaleEnUs.zip" -Force
+        }
+
+        Write-Host $Cambiando -Fore Yellow
+
+        $Shell = New-Object -com Shell.Application
+        $Shell.Namespace("$RutaInstalDefault2").copyhere($Shell.NameSpace("$RutaInstalDefault2\$LocaleEnUs.zip").Items(), 0x14)
+
+        Remove-Item "$RutaInstalDefault2\$LocaleEnUs.zip" -Force -ErrorAction SilentlyContinue
         Write-Host $CambioSpaEng -Fore DarkGreen
         Start-Sleep -Seconds 1
-    } elseif (Test-Path -Path $LocaleEsMx -PathType Container) {
-        Rename-Item -Path $LocaleEsMx -NewName $LocaleEnUs
-        Write-Host $CambioSpaEng -Fore DarkGreen
-        Start-Sleep -Seconds 1
-    } else {
+
+    } elseif ( ($IdiomaEng -match $XmlEnUs) -or ($IdiomaEng -match $XmlEnGb) ) {
         Write-Host $NoCambio -Fore Red
         Write-Host $Razones -Fore Yellow
+        #Write-Host $ErrorCambioYaInstalado -Fore Yellow
         Start-Sleep -Seconds 1
     }
 
     # Mantiene última versión elegida por el usuario en menú Adobe
     $OpcionMenu = $FreezeOpcionMenu
-    #Write-Host "version elegida antes de salir del menu ***DEBUG*** " $OpcionMenu -Fore Yellow;
 
     # Vuelve al menú
     MENU_ADOBE_SPA_A_ENG
@@ -568,7 +585,7 @@ function MENU_ME_ENG_A_SPA {
 
     # Mantiene última versión elegida por el usuario en menú Adobe
     $OpcionMenu = $FreezeOpcionMenu
-    #Write-Host "version elegida antes de salir del menu ***DEBUG*** " $OpcionMenu -Fore Yellow;
+    #Write-Host "version elegida antes de salir del menu **DEBUG** " $OpcionMenu -Fore Yellow;
 
     # Vuelve al menú
     MENU_ADOBE_ENG_A_SPA
@@ -606,7 +623,7 @@ function MENU_ME_SPA_A_ENG {
 
     # Mantiene última versión elegida por el usuario en menú Adobe
     $OpcionMenu = $FreezeOpcionMenu
-    #Write-Host "version elegida antes de salir del menu ***DEBUG*** " $OpcionMenu -Fore Yellow;
+    #Write-Host "version elegida antes de salir del menu **DEBUG** " $OpcionMenu -Fore Yellow;
 
     # Vuelve al menú
     MENU_ADOBE_SPA_A_ENG
@@ -752,7 +769,7 @@ function MENU_ANI_ENG_A_SPA {
     } elseif ( ($IdiomaSpa -match $XmlEsEs) -or ($IdiomaSpa -match $XmlEsMx) ) {
         Write-Host $NoCambio -Fore Red
         Write-Host $Razones -Fore Yellow
-        Write-Host $ErrorCambioYaInstalado -Fore Yellow
+        #Write-Host $ErrorCambioYaInstalado -Fore Yellow
         Start-Sleep -Seconds 1
     }
 
@@ -811,7 +828,7 @@ function MENU_ANI_SPA_A_ENG {
     } elseif ( ($IdiomaEng -match $XmlEnUs) -or ($IdiomaEng -match $XmlEnGb) ) {
         Write-Host $NoCambio -Fore Red
         Write-Host $Razones -Fore Yellow
-        Write-Host $ErrorCambioYaInstalado -Fore Yellow
+        #Write-Host $ErrorCambioYaInstalado -Fore Yellow
         Start-Sleep -Seconds 1
     }
 
@@ -835,7 +852,7 @@ function MENU_ILU_ENG_A_SPA {
     $IdiomaSpa = Get-Content "$Env:Programfiles\$RutaInstalDefault1\application.xml" | Where-Object {($_ -match $XmlEsEs) -or ($_ -match $XmlEsMx)}
     $Contenido = Get-Content "$Env:Programfiles\$RutaInstalDefault1\application.xml"
 
-    if ( ($IdiomaEng -match $XmlEnUs) -or ($IdiomaEng -match $XmlEnUs) ) {
+    if ( ($IdiomaEng -match $XmlEnUs) -or ($IdiomaEng -match $XmlEnGb) ) {
 
         if ( (($IdiomaEng -match $XmlEnUs) -and (Test-Path -Path "$RutaInstalDefault3\$LocaleEnUs" -PathType Container)) ) {
             $Contenido.replace($XmlEnUs,$XmlEsEs) | Set-Content "$Env:Programfiles\$RutaInstalDefault1\application.xml"
@@ -870,7 +887,7 @@ function MENU_ILU_ENG_A_SPA {
     } elseif ( ($IdiomaSpa -match $XmlEsEs) -or ($IdiomaSpa -match $XmlEsMx) ) {
         Write-Host $NoCambio -Fore Red
         Write-Host $Razones -Fore Yellow
-        Write-Host $ErrorCambioYaInstalado -Fore Yellow
+        #Write-Host $ErrorCambioYaInstalado -Fore Yellow
         Start-Sleep -Seconds 1
     }
 
@@ -929,7 +946,7 @@ function MENU_ILU_SPA_A_ENG {
     } elseif ( ($IdiomaEng -match $XmlEnUs) -or ($IdiomaEng -match $XmlEnGb) ) {
         Write-Host $NoCambio -Fore Red
         Write-Host $Razones -Fore Yellow
-        Write-Host $ErrorCambioYaInstalado -Fore Yellow
+        #Write-Host $ErrorCambioYaInstalado -Fore Yellow
         Start-Sleep -Seconds 1
     }
 
@@ -940,7 +957,125 @@ function MENU_ILU_SPA_A_ENG {
     MENU_ADOBE_SPA_A_ENG
 }
 
-# Cierra
+# Menú InCopy, inglés a español
+function MENU_INC_ENG_A_SPA {
+
+    $RutaInstalDefault1 = "Adobe\Adobe InCopy $VersionAdobe\AMT"
+    $RutaInstalDefault2 = "$Env:Programfiles\Adobe\Adobe InCopy $VersionAdobe"
+    $RutaInstalDefault3 = "$Env:Programfiles\Adobe\Adobe InCopy $VersionAdobe\Presets\InCopy_Workspaces"
+    $SourceDescarga = "$UrlLocales/inc/$VersionAdobe/$LocaleEsEs.zip"
+    $DestinoDescarga = "$ScriptDir\idiomas_simi\inc\$VersionAdobe"
+
+    $IdiomaEng = Get-Content "$Env:Programfiles\$RutaInstalDefault1\application.xml" | Where-Object {($_ -match $XmlEnUs) -or ($_ -match $XmlEnGb)}
+    $IdiomaSpa = Get-Content "$Env:Programfiles\$RutaInstalDefault1\application.xml" | Where-Object {($_ -match $XmlEsEs) -or ($_ -match $XmlEsMx)}
+    $Contenido = Get-Content "$Env:Programfiles\$RutaInstalDefault1\application.xml"
+
+    if ( ($IdiomaEng -match $XmlEnUs) -or ($IdiomaEng -match $XmlEnGb) ) {
+
+        if ( (($IdiomaEng -match $XmlEnUs) -and (Test-Path -Path "$RutaInstalDefault3\$LocaleEnUs" -PathType Container)) ) {
+            $Contenido.replace($XmlEnUs,$XmlEsEs) | Set-Content "$Env:Programfiles\$RutaInstalDefault1\application.xml"
+        } elseif ( (($IdiomaEng -match $XmlEnGb) -and (Test-Path -Path "$RutaInstalDefault3\$LocaleEnGb" -PathType Container)) ) {
+            $Contenido.replace($XmlEnGb,$XmlEsEs) | Set-Content "$Env:Programfiles\$RutaInstalDefault1\application.xml"
+        }
+
+        if ( (Test-Path -Path "$DestinoDescarga\$LocaleEsEs.zip" -PathType Leaf) -or (Test-Path -Path "$DestinoDescarga\$LocaleEsMx.zip" -PathType Leaf) ) {
+            Copy-Item -Path "$DestinoDescarga\$LocaleEsEs.zip" -Destination "$RutaInstalDefault2\$LocaleEsEs.zip" -Force
+        } else {
+            # Chequea si hay conexión a Internet
+            while (!(Test-Connection -computer google.com -count 1 -quiet)) {
+                Write-Host $SinConexion -Fore Red
+                Start-Sleep -Seconds 5
+            }
+            # Hay conexión
+            Write-Host $Descargando "(~70 KB)" -Fore Yellow
+            $null = New-Item -Path $DestinoDescarga -ItemType Directory -Force
+            Invoke-WebRequest -Uri $SourceDescarga -OutFile "$DestinoDescarga\$LocaleEsEs.zip"
+            Copy-Item -Path "$DestinoDescarga\$LocaleEsEs.zip" -Destination "$RutaInstalDefault2\$LocaleEsEs.zip" -Force
+        }
+
+        Write-Host $Cambiando -Fore Yellow
+
+        $Shell = New-Object -com Shell.Application
+        $Shell.Namespace("$RutaInstalDefault2").copyhere($Shell.NameSpace("$RutaInstalDefault2\$LocaleEsEs.zip").Items(), 0x14)
+
+        Remove-Item "$RutaInstalDefault2\$LocaleEsEs.zip" -Force -ErrorAction SilentlyContinue
+        Write-Host $CambioEngSpa -Fore DarkGreen
+        Start-Sleep -Seconds 1
+
+    } elseif ( ($IdiomaSpa -match $XmlEsEs) -or ($IdiomaSpa -match $XmlEsMx) ) {
+        Write-Host $NoCambio -Fore Red
+        Write-Host $Razones -Fore Yellow
+        #Write-Host $ErrorCambioYaInstalado -Fore Yellow
+        Start-Sleep -Seconds 1
+    }
+
+    # Mantiene última versión elegida por el usuario en menú Adobe
+    $OpcionMenu = $FreezeOpcionMenu
+
+    # Vuelve al menú
+    MENU_ADOBE_ENG_A_SPA
+}
+
+# Menú InCopy, español a inglés
+function MENU_INC_SPA_A_ENG {
+
+    $RutaInstalDefault1 = "Adobe\Adobe InCopy $VersionAdobe\AMT"
+    $RutaInstalDefault2 = "$Env:Programfiles\Adobe\Adobe InCopy $VersionAdobe"
+    $RutaInstalDefault3 = "$Env:Programfiles\Adobe\Adobe InCopy $VersionAdobe\Presets\InCopy_Workspaces"
+    $SourceDescarga = "$UrlLocales/inc/$VersionAdobe/$LocaleEnUs.zip"
+    $DestinoDescarga = "$ScriptDir\idiomas_simi\inc\$VersionAdobe"
+
+    $IdiomaEng = Get-Content "$Env:Programfiles\$RutaInstalDefault1\application.xml" | Where-Object {($_ -match $XmlEnUs) -or ($_ -match $XmlEnGb)}
+    $IdiomaSpa = Get-Content "$Env:Programfiles\$RutaInstalDefault1\application.xml" | Where-Object {($_ -match $XmlEsEs) -or ($_ -match $XmlEsMx)}
+    $Contenido = Get-Content "$Env:Programfiles\$RutaInstalDefault1\application.xml"
+
+    if ( ($IdiomaSpa -match $XmlEsEs) -or ($IdiomaSpa -match $XmlEsMx) ) {
+
+        if ( (($IdiomaSpa -match $XmlEsEs) -and (Test-Path -Path "$RutaInstalDefault3\$LocaleEsEs" -PathType Container)) ) {
+            $Contenido.replace($XmlEsEs,$XmlEnUs) | Set-Content "$Env:Programfiles\$RutaInstalDefault1\application.xml"
+        } elseif ( (($IdiomaSpa -match $XmlEsMx) -and (Test-Path -Path "$RutaInstalDefault3\$LocaleEsMx" -PathType Container)) ) {
+            $Contenido.replace($XmlEsMx,$XmlEnUs) | Set-Content "$Env:Programfiles\$RutaInstalDefault1\application.xml"
+        }
+
+        if ( (Test-Path -Path "$DestinoDescarga\$LocaleEnUs.zip" -PathType Leaf) -or (Test-Path -Path "$DestinoDescarga\$LocaleEnGb.zip" -PathType Leaf) ) {
+            Copy-Item -Path "$DestinoDescarga\$LocaleEnUs.zip" -Destination "$RutaInstalDefault2\$LocaleEnUs.zip" -Force
+        } else {
+            # Chequea si hay conexión a Internet
+            while (!(Test-Connection -computer google.com -count 1 -quiet)) {
+                Write-Host $SinConexion -Fore Red
+                Start-Sleep -Seconds 5
+            }
+            # Hay conexión
+            Write-Host $Descargando "(~75 KB)" -Fore Yellow
+            $null = New-Item -Path $DestinoDescarga -ItemType Directory -Force
+            Invoke-WebRequest -Uri $SourceDescarga -OutFile "$DestinoDescarga\$LocaleEnUs.zip"
+            Copy-Item -Path "$DestinoDescarga\$LocaleEnUs.zip" -Destination "$RutaInstalDefault2\$LocaleEnUs.zip" -Force
+        }
+
+        Write-Host $Cambiando -Fore Yellow
+
+        $Shell = New-Object -com Shell.Application
+        $Shell.Namespace("$RutaInstalDefault2").copyhere($Shell.NameSpace("$RutaInstalDefault2\$LocaleEnUs.zip").Items(), 0x14)
+
+        Remove-Item "$RutaInstalDefault2\$LocaleEnUs.zip" -Force -ErrorAction SilentlyContinue
+        Write-Host $CambioSpaEng -Fore DarkGreen
+        Start-Sleep -Seconds 1
+
+    } elseif ( ($IdiomaEng -match $XmlEnUs) -or ($IdiomaEng -match $XmlEnGb) ) {
+        Write-Host $NoCambio -Fore Red
+        Write-Host $Razones -Fore Yellow
+        #Write-Host $ErrorCambioYaInstalado -Fore Yellow
+        Start-Sleep -Seconds 1
+    }
+
+    # Mantiene última versión elegida por el usuario en menú Adobe
+    $OpcionMenu = $FreezeOpcionMenu
+
+    # Vuelve al menú
+    MENU_ADOBE_SPA_A_ENG
+}
+
+# Cierra app
 function MENU_SALIR {
     Write-Host "`n Gracias por usar Simi.`n ¡No olvides dejarnos una reseña en www.leandroperez.art!`n" -Fore Yellow
     Start-Sleep -Seconds 5
