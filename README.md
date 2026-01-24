@@ -12,4 +12,4 @@ Esta rama contiene **únicamente los archivos de idioma** del proyecto.
 ## Propósito
 Esta rama existe para:
 - Mantener los paquetes de idioma aislados del código
-- Evitar archivos grandes innecesarios
+- Evitar archivos grandes innecesarios al descargar el código
