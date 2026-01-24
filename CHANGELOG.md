@@ -1,3 +1,5 @@
-v1.8:
-- Compatibilidad con Adobe 2024
-- Ahora funciona con Character Animator 2018-2024
+v1.9:
+- Opción para buscar nuevas versiones de Simi
+- Antes de cambiar el idioma pregunta si se desea cerrar el programa de Adobe
+- Mejoras en el cambio de idioma para Media Encoder
+- Cambios cosméticos
