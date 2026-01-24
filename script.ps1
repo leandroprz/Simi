@@ -1,4 +1,4 @@
-﻿# Simi v1.6
+﻿# Simi v1.7
 # Cambiá el idioma de los programas de Adobe sin reinstalarlos
 # https://leandroperez.art/tienda/productos-gratuitos/simi-cambia-idioma-adobe-sin-reinstalar/
 # © Leandro Pérez
@@ -9,8 +9,10 @@
 # Variables versiones y paths
 $script:VersionAdobe
 $script:FreezeOpcionMenu
-$script:RutaInstalAlt
-$script:RutaInstalDefault
+$script:RutaInstalCustom
+$script:RutaInstalIngresada
+$script:RutaInstalacion
+$script:RutaInstalAdobe = "$Env:Programfiles\Adobe"
 
 # Variables idiomas
 $script:XmlEnUs = '<Data key="installedLanguages">en_US</Data>'
@@ -35,7 +37,7 @@ $script:AlertaCambio = "`n`n **¡Cerrá el programa de Adobe antes de cambiar el
 $script:NoCambio = "`n ¡No se pudo cambiar el idioma!"
 $script:Cambiando = "`n Instalando idioma..."
 $script:Razones = "`n Puede ser por diferentes razones:
- - El programa de Adobe no está instalado en la ruta por defecto [$Env:Programfiles\Adobe].
+ - El programa de Adobe no está instalado en la ruta que elegiste.
  - El programa de Adobe no se instaló usando la aplicación Creative Cloud.
  - La versión de Adobe que elegiste no está instalada en tu computadora.
  - Ya tenés instalado el idioma seleccionado."
@@ -44,22 +46,19 @@ $script:ErrorCambioPs = "`n Ya tenés instalado el idioma seleccionado. Lo podé
 $script:ErrorCambioYaInstalado = " - Ya tenés instalado el idioma seleccionado."
 $script:Descargando = "`n Descargando archivo de idioma..."
 $script:SinConexion = "`n No es posible conectarse a la página de descarga de idiomas. Intentando nuevamente en 5s..."
+$script:SimiDesc = "`n`n Simi v1.7 - © Leandro Pérez`n Cambiá el idioma de Adobe sin reinstalar los programas"
 
 # Fix for $PSScriptRoot when converting to exe (https://stackoverflow.com/a/60122064/5204005)
-$script:ScriptDir = if (-not $PSScriptRoot) {  # $PSScriptRoot not defined?
-    # Get the path of the executable *as invoked*, via
-    # [environment]::GetCommandLineArgs()[0],
-    # resolve it to a full path with Convert-Path, then get its directory path
-    Split-Path -Parent (Convert-Path ([environment]::GetCommandLineArgs()[0])) 
-    }
-    else {
-        # Use the automatic variable.
-        $PSScriptRoot 
+$script:ScriptDir = if (-not $PSScriptRoot) {
+    Split-Path -Parent (Convert-Path ([environment]::GetCommandLineArgs()[0]))
+    } else {
+        $PSScriptRoot
     }
 
 # Menú con opciones
 function Menu ($MenuNumero, $MenuCierra, $NombreMenu, $NombreFuncionMenu, $OpcionMenu1, $MenuFuncion1, $OpcionMenu2, $MenuFuncion2, $OpcionMenu3, $MenuFuncion3, $OpcionMenu4, $MenuFuncion4, $OpcionMenu5, $MenuFuncion5, $OpcionMenu6, $MenuFuncion6, $OpcionMenu7, $MenuFuncion7, $OpcionMenu8, $MenuFuncion8, $OpcionMenu9, $MenuFuncion9, $OpcionMenu10, $MenuFuncion10, $OpcionMenu11, $MenuFuncion11, $OpcionMenu12, $MenuFuncion12) {
 
+    Write-Host $SimiDesc -Fore DarkGray
     Write-Host "`n$NombreMenu`n" -Fore Gray
     if ($OpcionMenu1 -ne $null) { Write-Host " $OpcionMenu1" -Fore Gray }
     if ($OpcionMenu2 -ne $null) { Write-Host " $OpcionMenu2" -Fore Gray }
@@ -75,10 +74,12 @@ function Menu ($MenuNumero, $MenuCierra, $NombreMenu, $NombreFuncionMenu, $Opcio
     if ($OpcionMenu12 -ne $null) { Write-Host " $OpcionMenu12" -Fore Gray }
     
     [int]$OpcionMenu = Read-Host -Prompt "`n Tipeá una opción y presioná Enter"
+    #Clear-Host
+    [System.Console]::Clear()
         
     if ( ($OpcionMenu -lt $MenuNumero) -or ($OpcionMenu -gt $MenuCierra) ) {
-        Write-Host "`n Tipeá una de las opciones que están arriba.`n" -Fore Red
-        Start-Sleep -Seconds 1
+        Write-Host "`n Tipeá una opción del menú (en números)." -Fore Red
+        #Start-Sleep -Seconds 1
         Invoke-Expression $NombreFuncionMenu
     } else {
         if ($OpcionMenu -eq $MenuNumero) { Invoke-Expression $MenuFuncion1 }
@@ -98,7 +99,6 @@ function Menu ($MenuNumero, $MenuCierra, $NombreMenu, $NombreFuncionMenu, $Opcio
 
 # Menú principal, muestra idiomas
 function MENU_PRINCIPAL {
-    Write-Host "`n`n Simi v1.6 - © Leandro Pérez`n Cambiá el idioma de Adobe sin reinstalar los programas" -Fore DarkGray
     Menu 1 4 "`n Menú principal`n ==============" MENU_PRINCIPAL `
         "1. Cambiar de inglés a español" MENU_ENG_A_SPA_PRINCIPAL `
         "2. Cambiar de español a inglés" MENU_SPA_A_ENG_PRINCIPAL `
@@ -134,18 +134,39 @@ function MENU_SPA_A_ENG_PRINCIPAL {
         "9. Ayuda" MENU_AYUDA
 }
 
-# Pide ingreso de ruta de instalación del programa de Adobe
-# function RUTA_INSTALACION {
-#     $RutaInstalAlt = Read-Host -Prompt "`n Ingresá la ruta de instalación del programa o presioná Enter para usar la ruta por defecto (C:\Archivos de programa\Adobe)"
-#     if ($RutaInstalAlt) {
-#         Write-Host "`n Se cambiará el idioma en la ruta [$RutaInstalAlt].`n Si recibís un error, asegurate de que la ruta ingresada no termine en una barra '\'. Ej.: [F:\Programas\After 2022]."
-#     } else {
-#         Write-Host "`n Se usará la ruta por defecto (C:\Archivos de programa\Adobe\<programa de Adobe>)."
-#         $RutaInstalDefault = "$Env:Programfiles\Adobe"
-#         $RutaInstalAlt = $RutaInstalDefault
-#     }
-# }
+# Get tamaño archivo de descarga (https://chat.openai.com/chat/75b0de7b-17a3-47bd-9e60-d1639e8c8b58)
+function TAMANIO_DESCARGA {
+    param([string]$Url)
 
+    $Bytes = (Invoke-WebRequest $Url -Method Head).Headers.'Content-Length'
+    if ($Bytes -ge 1000000) {
+        $Tamanio = $Bytes / 1MB
+        $TamanioFormateado = "{0:F2} MB" -f $Tamanio
+    } else {
+        $Tamanio = $Bytes / 1KB
+        $TamanioFormateado = "{0:F2} KB" -f $Tamanio
+    }
+    #Write-Host "Tamaño de la descarga: $TamanioFormateado"
+    Write-Host $Descargando "($TamanioFormateado)" -Fore Yellow
+}
+
+# Permite elegir ruta de instalación del programa de Adobe (https://chat.openai.com/chat/461fff1a-71df-425f-9627-a87caa072b90)
+function RUTA_INSTALACION {
+    Write-Host $SimiDesc"`n" -Fore DarkGray
+    if (![string]::IsNullOrWhiteSpace($RutaInstalCustom)) {
+        $RutaInstalIngresada = $RutaInstalCustom.TrimEnd('\')
+    } else {
+        $RutaInstalCustom = Read-Host "`n Ingresá la ruta donde instalaste el programa`n o presioná Enter para usar la ruta por defecto [$Env:Programfiles\Adobe]"
+        if (![string]::IsNullOrWhiteSpace($RutaInstalCustom)) {
+            $RutaInstalIngresada = $RutaInstalCustom.TrimEnd('\')
+            Write-Host "`n Se usará la ruta ingresada [$RutaInstalIngresada]." -Fore Yellow
+        } else {
+            $RutaInstalIngresada = "$Env:Programfiles\Adobe"
+            Write-Host "`n Se usará la ruta por defecto [$RutaInstalIngresada]." -Fore Yellow
+        }
+    }
+    return $RutaInstalIngresada
+}
 
 # Menú Adobe inglés a español
 function MENU_ADOBE_ENG_A_SPA {
@@ -247,28 +268,26 @@ function MENU_ADOBE_SPA_A_ENG {
 
 # Menú After Effects, inglés a español
 function MENU_AE_ENG_A_SPA {
+    
+    $RutaInstalAe = "Adobe After Effects $VersionAdobe"
+    $RutaInstalacion = RUTA_INSTALACION
+    #Write-Host "La ruta que se usará es: [$RutaInstalacion]" **DEBUG**
+    
+    if ($RutaInstalacion -eq $RutaInstalAdobe) {
+        $RutaInstalacion = "$RutaInstalAdobe\$RutaInstalAe"
+    } elseif ($RutaInstalacion -ne $RutaInstalAdobe) {
+        $RutaInstalacion = "$RutaInstalacion"
+    }
 
-    # #RUTA_INSTALACION
-
-    # $RutaInstalDefault = "$Env:Programfiles\Adobe\Adobe After Effects $VersionAdobe\Support Files\AMT"
-
-    # if ($RutaInstalAlt -ne $RutaInstalDefault) {
-    #     cd "$RutaInstalAlt\Support Files\AMT"
-    # } elseif ($RutaInstalAlt -eq $RutaInstalDefault) {
-    #     cd $RutaInstalDefault
-    # }
-
-    $RutaInstalDefault = "Adobe\Adobe After Effects $VersionAdobe\Support Files\AMT"
-
-    $Idioma = Get-Content "$Env:Programfiles\$RutaInstalDefault\application.xml" | Where-Object {($_ -match $XmlEnUs) -or ($_ -match $XmlEnGb)}
-    $Contenido = Get-Content "$Env:Programfiles\$RutaInstalDefault\application.xml"
+    $Idioma = Get-Content "$RutaInstalacion\Support Files\AMT\application.xml" | Where-Object {($_ -match $XmlEnUs) -or ($_ -match $XmlEnGb)}
+    $Contenido = Get-Content "$RutaInstalacion\Support Files\AMT\application.xml"
 
     if ($Idioma -match $XmlEnUs) {
-        $Contenido.replace($XmlEnUs,$XmlEsEs) | Set-Content "$Env:Programfiles\$RutaInstalDefault\application.xml"
+        $Contenido.replace($XmlEnUs,$XmlEsEs) | Set-Content "$RutaInstalacion\Support Files\AMT\application.xml"
         Write-Host $CambioEngSpa -Fore DarkGreen
         Start-Sleep -Seconds 1
     } elseif ($Idioma -match $XmlEnGb) {
-        $Contenido.replace($XmlEnGb,$XmlEsEs) | Set-Content "$Env:Programfiles\$RutaInstalDefault\application.xml"
+        $Contenido.replace($XmlEnGb,$XmlEsEs) | Set-Content "$RutaInstalacion\Support Files\AMT\application.xml"
         Write-Host $CambioEngSpa -Fore DarkGreen
         Start-Sleep -Seconds 1
     } else {
@@ -287,18 +306,26 @@ function MENU_AE_ENG_A_SPA {
 
 # Menú After Effects, español a inglés
 function MENU_AE_SPA_A_ENG {
-    
-    $RutaInstalDefault = "Adobe\Adobe After Effects $VersionAdobe\Support Files\AMT"
 
-    $Idioma = Get-Content "$Env:Programfiles\$RutaInstalDefault\application.xml" | Where-Object {($_ -match $XmlEsEs) -or ($_ -match $XmlEsMx)}
-    $Contenido = Get-Content "$Env:Programfiles\$RutaInstalDefault\application.xml"
+    $RutaInstalAe = "Adobe After Effects $VersionAdobe"
+    $RutaInstalacion = RUTA_INSTALACION
+    #Write-Host "La ruta que se usará es: [$RutaInstalacion]" **DEBUG**
+    
+    if ($RutaInstalacion -eq $RutaInstalAdobe) {
+        $RutaInstalacion = "$RutaInstalAdobe\$RutaInstalAe"
+    } elseif ($RutaInstalacion -ne $RutaInstalAdobe) {
+        $RutaInstalacion = "$RutaInstalacion"
+    }
+
+    $Idioma = Get-Content "$RutaInstalacion\Support Files\AMT\application.xml" | Where-Object {($_ -match $XmlEsEs) -or ($_ -match $XmlEsMx)}
+    $Contenido = Get-Content "$RutaInstalacion\Support Files\AMT\application.xml"
 
     if ($Idioma -match $XmlEsEs) {
-        $Contenido.replace($XmlEsEs,$XmlEnUs) | Set-Content "$Env:Programfiles\$RutaInstalDefault\application.xml"
+        $Contenido.replace($XmlEsEs,$XmlEnUs) | Set-Content "$RutaInstalacion\Support Files\AMT\application.xml"
         Write-Host $CambioSpaEng -Fore DarkGreen
         Start-Sleep -Seconds 1
     } elseif ($Idioma -match $XmlEsMx) {
-        $Contenido.replace($XmlEsMx,$XmlEnUs) | Set-Content "$Env:Programfiles\$RutaInstalDefault\application.xml"
+        $Contenido.replace($XmlEsMx,$XmlEnUs) | Set-Content "$RutaInstalacion\Support Files\AMT\application.xml"
         Write-Host $CambioSpaEng -Fore DarkGreen
         Start-Sleep -Seconds 1
     } else {
@@ -318,17 +345,25 @@ function MENU_AE_SPA_A_ENG {
 # Menú Premiere Pro, inglés a español
 function MENU_PPRO_ENG_A_SPA {
 
-    $RutaInstalDefault = "Adobe\Adobe Premiere Pro $VersionAdobe\AMT"
+    $RutaInstalPpro = "Adobe Premiere Pro $VersionAdobe"
+    $RutaInstalacion = RUTA_INSTALACION
+    #Write-Host "La ruta que se usará es: [$RutaInstalacion]" **DEBUG**
+    
+    if ($RutaInstalacion -eq $RutaInstalAdobe) {
+        $RutaInstalacion = "$RutaInstalAdobe\$RutaInstalPpro"
+    } elseif ($RutaInstalacion -ne $RutaInstalAdobe) {
+        $RutaInstalacion = "$RutaInstalacion"
+    }
 
-    $Idioma = Get-Content "$Env:Programfiles\$RutaInstalDefault\application.xml" | Where-Object {($_ -match $XmlEnUs) -or ($_ -match $XmlEnGb)}
-    $Contenido = Get-Content "$Env:Programfiles\$RutaInstalDefault\application.xml"
+    $Idioma = Get-Content "$RutaInstalacion\AMT\application.xml" | Where-Object {($_ -match $XmlEnUs) -or ($_ -match $XmlEnGb)}
+    $Contenido = Get-Content "$RutaInstalacion\AMT\application.xml"
 
     if ($Idioma -match $XmlEnUs) {
-        $Contenido.replace($XmlEnUs,$XmlEsEs) | Set-Content "$Env:Programfiles\$RutaInstalDefault\application.xml"
+        $Contenido.replace($XmlEnUs,$XmlEsEs) | Set-Content "$RutaInstalacion\AMT\application.xml"
         Write-Host $CambioEngSpa -Fore DarkGreen
         Start-Sleep -Seconds 1
     } elseif ($Idioma -match $XmlEnGb) {
-        $Contenido.replace($XmlEnGb,$XmlEsEs) | Set-Content "$Env:Programfiles\$RutaInstalDefault\application.xml"
+        $Contenido.replace($XmlEnGb,$XmlEsEs) | Set-Content "$RutaInstalacion\AMT\application.xml"
         Write-Host $CambioEngSpa -Fore DarkGreen
         Start-Sleep -Seconds 1
     } else {
@@ -348,17 +383,25 @@ function MENU_PPRO_ENG_A_SPA {
 # Menú Premiere Pro, español a inglés
 function MENU_PPRO_SPA_A_ENG {
 
-    $RutaInstalDefault = "Adobe\Adobe Premiere Pro $VersionAdobe\AMT"
+    $RutaInstalPpro = "Adobe Premiere Pro $VersionAdobe"
+    $RutaInstalacion = RUTA_INSTALACION
+    #Write-Host "La ruta que se usará es: [$RutaInstalacion]" **DEBUG**
+    
+    if ($RutaInstalacion -eq $RutaInstalAdobe) {
+        $RutaInstalacion = "$RutaInstalAdobe\$RutaInstalPpro"
+    } elseif ($RutaInstalacion -ne $RutaInstalAdobe) {
+        $RutaInstalacion = "$RutaInstalacion"
+    }
 
-    $Idioma = Get-Content "$Env:Programfiles\$RutaInstalDefault\application.xml" | Where-Object {($_ -match $XmlEsEs) -or ($_ -match $XmlEsMx)}
-    $Contenido = Get-Content "$Env:Programfiles\$RutaInstalDefault\application.xml"
+    $Idioma = Get-Content "$RutaInstalacion\AMT\application.xml" | Where-Object {($_ -match $XmlEsEs) -or ($_ -match $XmlEsMx)}
+    $Contenido = Get-Content "$RutaInstalacion\AMT\application.xml"
 
     if ($Idioma -match $XmlEsEs) {
-        $Contenido.replace($XmlEsEs,$XmlEnUs) | Set-Content "$Env:Programfiles\$RutaInstalDefault\application.xml"
+        $Contenido.replace($XmlEsEs,$XmlEnUs) | Set-Content "$RutaInstalacion\AMT\application.xml"
         Write-Host $CambioSpaEng -Fore DarkGreen
         Start-Sleep -Seconds 1
     } elseif ($Idioma -match $XmlEsMx) {
-        $Contenido.replace($XmlEsMx,$XmlEnUs) | Set-Content "$Env:Programfiles\$RutaInstalDefault\application.xml"
+        $Contenido.replace($XmlEsMx,$XmlEnUs) | Set-Content "$RutaInstalacion\AMT\application.xml"
         Write-Host $CambioSpaEng -Fore DarkGreen
         Start-Sleep -Seconds 1
     } else {
@@ -377,18 +420,26 @@ function MENU_PPRO_SPA_A_ENG {
 
 # Menú Audition, inglés a español
 function MENU_AUDI_ENG_A_SPA {
-    
-    $RutaInstalDefault = "Adobe\Adobe Audition $VersionAdobe\AMT"
 
-    $Idioma = Get-Content "$Env:Programfiles\$RutaInstalDefault\application.xml" | Where-Object {($_ -match $XmlEnUs) -or ($_ -match $XmlEnGb)}
-    $Contenido = Get-Content "$Env:Programfiles\$RutaInstalDefault\application.xml"
+    $RutaInstalAudi = "Adobe Audition $VersionAdobe"
+    $RutaInstalacion = RUTA_INSTALACION
+    #Write-Host "La ruta que se usará es: [$RutaInstalacion]" **DEBUG**
+    
+    if ($RutaInstalacion -eq $RutaInstalAdobe) {
+        $RutaInstalacion = "$RutaInstalAdobe\$RutaInstalAudi"
+    } elseif ($RutaInstalacion -ne $RutaInstalAdobe) {
+        $RutaInstalacion = "$RutaInstalacion"
+    }
+
+    $Idioma = Get-Content "$RutaInstalacion\AMT\application.xml" | Where-Object {($_ -match $XmlEnUs) -or ($_ -match $XmlEnGb)}
+    $Contenido = Get-Content "$RutaInstalacion\AMT\application.xml"
 
     if ($Idioma -match $XmlEnUs) {
-        $Contenido.replace($XmlEnUs,$XmlEsEs) | Set-Content "$Env:Programfiles\$RutaInstalDefault\application.xml"
+        $Contenido.replace($XmlEnUs,$XmlEsEs) | Set-Content "$RutaInstalacion\AMT\application.xml"
         Write-Host $CambioEngSpa -Fore DarkGreen
         Start-Sleep -Seconds 1
     } elseif ($Idioma -match $XmlEnGb) {
-        $Contenido.replace($XmlEnGb,$XmlEsEs) | Set-Content "$Env:Programfiles\$RutaInstalDefault\application.xml"
+        $Contenido.replace($XmlEnGb,$XmlEsEs) | Set-Content "$RutaInstalacion\AMT\application.xml"
         Write-Host $CambioEngSpa -Fore DarkGreen
         Start-Sleep -Seconds 1
     } else {
@@ -407,18 +458,26 @@ function MENU_AUDI_ENG_A_SPA {
 
 # Menú Audition, español a inglés
 function MENU_AUDI_SPA_A_ENG {
+
+    $RutaInstalAudi = "Adobe Audition $VersionAdobe"
+    $RutaInstalacion = RUTA_INSTALACION
+    #Write-Host "La ruta que se usará es: [$RutaInstalacion]" **DEBUG**
     
-    $RutaInstalDefault = "Adobe\Adobe Audition $VersionAdobe\AMT"
+    if ($RutaInstalacion -eq $RutaInstalAdobe) {
+        $RutaInstalacion = "$RutaInstalAdobe\$RutaInstalAudi"
+    } elseif ($RutaInstalacion -ne $RutaInstalAdobe) {
+        $RutaInstalacion = "$RutaInstalacion"
+    }
     
-    $Idioma = Get-Content "$Env:Programfiles\$RutaInstalDefault\application.xml" | Where-Object {($_ -match $XmlEsEs) -or ($_ -match $XmlEsMx)}
-    $Contenido = Get-Content "$Env:Programfiles\$RutaInstalDefault\application.xml"
+    $Idioma = Get-Content "$RutaInstalacion\AMT\application.xml" | Where-Object {($_ -match $XmlEsEs) -or ($_ -match $XmlEsMx)}
+    $Contenido = Get-Content "$RutaInstalacion\AMT\application.xml"
 
     if ($Idioma -match $XmlEsEs) {
-        $Contenido.replace($XmlEsEs,$XmlEnUs) | Set-Content "$Env:Programfiles\$RutaInstalDefault\application.xml"
+        $Contenido.replace($XmlEsEs,$XmlEnUs) | Set-Content "$RutaInstalacion\AMT\application.xml"
         Write-Host $CambioSpaEng -Fore DarkGreen
         Start-Sleep -Seconds 1
     } elseif ($Idioma -match $XmlEsMx) {
-        $Contenido.replace($XmlEsMx,$XmlEnUs) | Set-Content "$Env:Programfiles\$RutaInstalDefault\application.xml"
+        $Contenido.replace($XmlEsMx,$XmlEnUs) | Set-Content "$RutaInstalacion\AMT\application.xml"
         Write-Host $CambioSpaEng -Fore DarkGreen
         Start-Sleep -Seconds 1
     } else {
@@ -438,26 +497,32 @@ function MENU_AUDI_SPA_A_ENG {
 # Menú InDesign, inglés a español
 function MENU_IND_ENG_A_SPA {
 
-    $RutaInstalDefault1 = "Adobe\Adobe InDesign $VersionAdobe\AMT"
-    $RutaInstalDefault2 = "$Env:Programfiles\Adobe\Adobe InDesign $VersionAdobe"
-    $RutaInstalDefault3 = "$Env:Programfiles\Adobe\Adobe InDesign $VersionAdobe\Presets\InDesign_Workspaces"
+    $RutaInstalInd = "Adobe InDesign $VersionAdobe"
     $SourceDescarga = "$UrlLocales/ind/$VersionAdobe/$LocaleEsEs.zip"
     $DestinoDescarga = "$ScriptDir\idiomas_simi\ind\$VersionAdobe"
+    $RutaInstalacion = RUTA_INSTALACION
+    #Write-Host "La ruta que se usará es: [$RutaInstalacion]" **DEBUG**
+    
+    if ($RutaInstalacion -eq $RutaInstalAdobe) {
+        $RutaInstalacion = "$RutaInstalAdobe\$RutaInstalInd"
+    } elseif ($RutaInstalacion -ne $RutaInstalAdobe) {
+        $RutaInstalacion = "$RutaInstalacion"
+    }
 
-    $IdiomaEng = Get-Content "$Env:Programfiles\$RutaInstalDefault1\application.xml" | Where-Object {($_ -match $XmlEnUs) -or ($_ -match $XmlEnGb)}
-    $IdiomaSpa = Get-Content "$Env:Programfiles\$RutaInstalDefault1\application.xml" | Where-Object {($_ -match $XmlEsEs) -or ($_ -match $XmlEsMx)}
-    $Contenido = Get-Content "$Env:Programfiles\$RutaInstalDefault1\application.xml"
+    $IdiomaEng = Get-Content "$RutaInstalacion\AMT\application.xml" | Where-Object {($_ -match $XmlEnUs) -or ($_ -match $XmlEnGb)}
+    $IdiomaSpa = Get-Content "$RutaInstalacion\AMT\application.xml" | Where-Object {($_ -match $XmlEsEs) -or ($_ -match $XmlEsMx)}
+    $Contenido = Get-Content "$RutaInstalacion\AMT\application.xml"
 
     if ( ($IdiomaEng -match $XmlEnUs) -or ($IdiomaEng -match $XmlEnGb) ) {
 
-        if ( (($IdiomaEng -match $XmlEnUs) -and (Test-Path -Path "$RutaInstalDefault3\$LocaleEnUs" -PathType Container)) ) {
-            $Contenido.replace($XmlEnUs,$XmlEsEs) | Set-Content "$Env:Programfiles\$RutaInstalDefault1\application.xml"
-        } elseif ( (($IdiomaEng -match $XmlEnGb) -and (Test-Path -Path "$RutaInstalDefault3\$LocaleEnGb" -PathType Container)) ) {
-            $Contenido.replace($XmlEnGb,$XmlEsEs) | Set-Content "$Env:Programfiles\$RutaInstalDefault1\application.xml"
+        if ( (($IdiomaEng -match $XmlEnUs) -and (Test-Path -Path "$RutaInstalacion\Presets\InDesign_Workspaces\$LocaleEnUs" -PathType Container)) ) {
+            $Contenido.replace($XmlEnUs,$XmlEsEs) | Set-Content "$RutaInstalacion\AMT\application.xml"
+        } elseif ( (($IdiomaEng -match $XmlEnGb) -and (Test-Path -Path "$RutaInstalacion\Presets\InDesign_Workspaces\$LocaleEnGb" -PathType Container)) ) {
+            $Contenido.replace($XmlEnGb,$XmlEsEs) | Set-Content "$RutaInstalacion\AMT\application.xml"
         }
 
         if ( (Test-Path -Path "$DestinoDescarga\$LocaleEsEs.zip" -PathType Leaf) -or (Test-Path -Path "$DestinoDescarga\$LocaleEsMx.zip" -PathType Leaf) ) {
-            Copy-Item -Path "$DestinoDescarga\$LocaleEsEs.zip" -Destination "$RutaInstalDefault2\$LocaleEsEs.zip" -Force
+            Copy-Item -Path "$DestinoDescarga\$LocaleEsEs.zip" -Destination "$RutaInstalacion\$LocaleEsEs.zip" -Force
         } else {
             # Chequea si hay conexión a Internet
             while (!(Test-Connection -computer google.com -count 1 -quiet)) {
@@ -465,18 +530,19 @@ function MENU_IND_ENG_A_SPA {
                 Start-Sleep -Seconds 5
             }
             # Hay conexión
-            Write-Host $Descargando "(~97 KB)" -Fore Yellow
+            #Write-Host $Descargando "(~97 KB)" -Fore Yellow ************
+            TAMANIO_DESCARGA -Url $SourceDescarga
             $null = New-Item -Path $DestinoDescarga -ItemType Directory -Force
             Invoke-WebRequest -Uri $SourceDescarga -OutFile "$DestinoDescarga\$LocaleEsEs.zip"
-            Copy-Item -Path "$DestinoDescarga\$LocaleEsEs.zip" -Destination "$RutaInstalDefault2\$LocaleEsEs.zip" -Force
+            Copy-Item -Path "$DestinoDescarga\$LocaleEsEs.zip" -Destination "$RutaInstalacion\$LocaleEsEs.zip" -Force
         }
 
         Write-Host $Cambiando -Fore Yellow
 
         $Shell = New-Object -com Shell.Application
-        $Shell.Namespace("$RutaInstalDefault2").copyhere($Shell.NameSpace("$RutaInstalDefault2\$LocaleEsEs.zip").Items(), 0x14)
+        $Shell.Namespace("$RutaInstalacion").copyhere($Shell.NameSpace("$RutaInstalacion\$LocaleEsEs.zip").Items(), 0x14)
 
-        Remove-Item "$RutaInstalDefault2\$LocaleEsEs.zip" -Force -ErrorAction SilentlyContinue
+        Remove-Item "$RutaInstalacion\$LocaleEsEs.zip" -Force -ErrorAction SilentlyContinue
         Write-Host $CambioEngSpa -Fore DarkGreen
         Start-Sleep -Seconds 1
 
@@ -497,26 +563,32 @@ function MENU_IND_ENG_A_SPA {
 # Menú InDesign, español a inglés
 function MENU_IND_SPA_A_ENG {
 
-    $RutaInstalDefault1 = "Adobe\Adobe InDesign $VersionAdobe\AMT"
-    $RutaInstalDefault2 = "$Env:Programfiles\Adobe\Adobe InDesign $VersionAdobe"
-    $RutaInstalDefault3 = "$Env:Programfiles\Adobe\Adobe InDesign $VersionAdobe\Presets\InDesign_Workspaces"
+    $RutaInstalInd = "Adobe InDesign $VersionAdobe"
     $SourceDescarga = "$UrlLocales/ind/$VersionAdobe/$LocaleEnUs.zip"
     $DestinoDescarga = "$ScriptDir\idiomas_simi\ind\$VersionAdobe"
+    $RutaInstalacion = RUTA_INSTALACION
+    #Write-Host "La ruta que se usará es: [$RutaInstalacion]" **DEBUG**
+    
+    if ($RutaInstalacion -eq $RutaInstalAdobe) {
+        $RutaInstalacion = "$RutaInstalAdobe\$RutaInstalInd"
+    } elseif ($RutaInstalacion -ne $RutaInstalAdobe) {
+        $RutaInstalacion = "$RutaInstalacion"
+    }
 
-    $IdiomaEng = Get-Content "$Env:Programfiles\$RutaInstalDefault1\application.xml" | Where-Object {($_ -match $XmlEnUs) -or ($_ -match $XmlEnGb)}
-    $IdiomaSpa = Get-Content "$Env:Programfiles\$RutaInstalDefault1\application.xml" | Where-Object {($_ -match $XmlEsEs) -or ($_ -match $XmlEsMx)}
-    $Contenido = Get-Content "$Env:Programfiles\$RutaInstalDefault1\application.xml"
+    $IdiomaEng = Get-Content "$RutaInstalacion\AMT\application.xml" | Where-Object {($_ -match $XmlEnUs) -or ($_ -match $XmlEnGb)}
+    $IdiomaSpa = Get-Content "$RutaInstalacion\AMT\application.xml" | Where-Object {($_ -match $XmlEsEs) -or ($_ -match $XmlEsMx)}
+    $Contenido = Get-Content "$RutaInstalacion\AMT\application.xml"
 
     if ( ($IdiomaSpa -match $XmlEsEs) -or ($IdiomaSpa -match $XmlEsMx) ) {
 
-        if ( (($IdiomaSpa -match $XmlEsEs) -and (Test-Path -Path "$RutaInstalDefault3\$LocaleEsEs" -PathType Container)) ) {
-            $Contenido.replace($XmlEsEs,$XmlEnUs) | Set-Content "$Env:Programfiles\$RutaInstalDefault1\application.xml"
-        } elseif ( (($IdiomaSpa -match $XmlEsMx) -and (Test-Path -Path "$RutaInstalDefault3\$LocaleEsMx" -PathType Container)) ) {
-            $Contenido.replace($XmlEsMx,$XmlEnUs) | Set-Content "$Env:Programfiles\$RutaInstalDefault1\application.xml"
+        if ( (($IdiomaSpa -match $XmlEsEs) -and (Test-Path -Path "$RutaInstalacion\Presets\InDesign_Workspaces\$LocaleEsEs" -PathType Container)) ) {
+            $Contenido.replace($XmlEsEs,$XmlEnUs) | Set-Content "$RutaInstalacion\AMT\application.xml"
+        } elseif ( (($IdiomaSpa -match $XmlEsMx) -and (Test-Path -Path "$RutaInstalacion\Presets\InDesign_Workspaces\$LocaleEsMx" -PathType Container)) ) {
+            $Contenido.replace($XmlEsMx,$XmlEnUs) | Set-Content "$RutaInstalacion\AMT\application.xml"
         }
 
         if ( (Test-Path -Path "$DestinoDescarga\$LocaleEnUs.zip" -PathType Leaf) -or (Test-Path -Path "$DestinoDescarga\$LocaleEnGb.zip" -PathType Leaf) ) {
-            Copy-Item -Path "$DestinoDescarga\$LocaleEnUs.zip" -Destination "$RutaInstalDefault2\$LocaleEnUs.zip" -Force
+            Copy-Item -Path "$DestinoDescarga\$LocaleEnUs.zip" -Destination "$RutaInstalacion\$LocaleEnUs.zip" -Force
         } else {
             # Chequea si hay conexión a Internet
             while (!(Test-Connection -computer google.com -count 1 -quiet)) {
@@ -524,18 +596,19 @@ function MENU_IND_SPA_A_ENG {
                 Start-Sleep -Seconds 5
             }
             # Hay conexión
-            Write-Host $Descargando "(~95 KB)" -Fore Yellow
+            #Write-Host $Descargando "(~95 KB)" -Fore Yellow
+            TAMANIO_DESCARGA -Url $SourceDescarga
             $null = New-Item -Path $DestinoDescarga -ItemType Directory -Force
             Invoke-WebRequest -Uri $SourceDescarga -OutFile "$DestinoDescarga\$LocaleEnUs.zip"
-            Copy-Item -Path "$DestinoDescarga\$LocaleEnUs.zip" -Destination "$RutaInstalDefault2\$LocaleEnUs.zip" -Force
+            Copy-Item -Path "$DestinoDescarga\$LocaleEnUs.zip" -Destination "$RutaInstalacion\$LocaleEnUs.zip" -Force
         }
 
         Write-Host $Cambiando -Fore Yellow
 
         $Shell = New-Object -com Shell.Application
-        $Shell.Namespace("$RutaInstalDefault2").copyhere($Shell.NameSpace("$RutaInstalDefault2\$LocaleEnUs.zip").Items(), 0x14)
+        $Shell.Namespace("$RutaInstalacion").copyhere($Shell.NameSpace("$RutaInstalacion\$LocaleEnUs.zip").Items(), 0x14)
 
-        Remove-Item "$RutaInstalDefault2\$LocaleEnUs.zip" -Force -ErrorAction SilentlyContinue
+        Remove-Item "$RutaInstalacion\$LocaleEnUs.zip" -Force -ErrorAction SilentlyContinue
         Write-Host $CambioSpaEng -Fore DarkGreen
         Start-Sleep -Seconds 1
 
@@ -555,26 +628,34 @@ function MENU_IND_SPA_A_ENG {
 
 # Menú Media Encoder, inglés a español
 function MENU_ME_ENG_A_SPA {
+
+    $RutaInstalMe = "Adobe Media Encoder $VersionAdobe"
+    $RutaInstalacion = RUTA_INSTALACION
+    #Write-Host "La ruta que se usará es: [$RutaInstalacion]" **DEBUG**
     
-    $RutaInstalDefault = "Adobe\Adobe Media Encoder $VersionAdobe\AMT"
-    
-    $Idioma = Get-Content "$Env:Programfiles\$RutaInstalDefault\application.xml" | Where-Object {($_ -match $XmlAllLang1) -or ($_ -match $XmlAllLang2) -or ($_ -match $XmlEnUs) -or ($_ -match $XmlEnGb)}
-    $Contenido = Get-Content "$Env:Programfiles\$RutaInstalDefault\application.xml"
+    if ($RutaInstalacion -eq $RutaInstalAdobe) {
+        $RutaInstalacion = "$RutaInstalAdobe\$RutaInstalMe"
+    } elseif ($RutaInstalacion -ne $RutaInstalAdobe) {
+        $RutaInstalacion = "$RutaInstalacion"
+    }
+
+    $Idioma = Get-Content "$RutaInstalacion\AMT\application.xml" | Where-Object {($_ -match $XmlAllLang1) -or ($_ -match $XmlAllLang2) -or ($_ -match $XmlEnUs) -or ($_ -match $XmlEnGb)}
+    $Contenido = Get-Content "$RutaInstalacion\AMT\application.xml"
 
     if ($Idioma -match $XmlAllLang1) {
-        $Contenido.replace($XmlAllLang1,$XmlEsEs) | Set-Content "$Env:Programfiles\$RutaInstalDefault\application.xml"
+        $Contenido.replace($XmlAllLang1,$XmlEsEs) | Set-Content "$RutaInstalacion\AMT\application.xml"
         Write-Host $CambioEngSpa -Fore DarkGreen
         Start-Sleep -Seconds 1
     } elseif ($Idioma -match $XmlAllLang2) {
-        $Contenido.replace($XmlAllLang2,$XmlEsEs) | Set-Content "$Env:Programfiles\$RutaInstalDefault\application.xml"
+        $Contenido.replace($XmlAllLang2,$XmlEsEs) | Set-Content "$RutaInstalacion\AMT\application.xml"
         Write-Host $CambioEngSpa -Fore DarkGreen
         Start-Sleep -Seconds 1
     } elseif ($Idioma -match $XmlEnUs) {
-        $Contenido.replace($XmlEnUs,$XmlEsEs) | Set-Content "$Env:Programfiles\$RutaInstalDefault\application.xml"
+        $Contenido.replace($XmlEnUs,$XmlEsEs) | Set-Content "$RutaInstalacion\AMT\application.xml"
         Write-Host $CambioEngSpa -Fore DarkGreen
         Start-Sleep -Seconds 1
     } elseif ($Idioma -match $XmlEnGb) {
-        $Contenido.replace($XmlEnGb,$XmlEsEs) | Set-Content "$Env:Programfiles\$RutaInstalDefault\application.xml"
+        $Contenido.replace($XmlEnGb,$XmlEsEs) | Set-Content "$RutaInstalacion\AMT\application.xml"
         Write-Host $CambioEngSpa -Fore DarkGreen
         Start-Sleep -Seconds 1
     } else {
@@ -594,25 +675,33 @@ function MENU_ME_ENG_A_SPA {
 # Menú Media Encoder, español a inglés
 function MENU_ME_SPA_A_ENG {
 
-    $RutaInstalDefault = "Adobe\Adobe Media Encoder $VersionAdobe\AMT"
+    $RutaInstalMe = "Adobe Media Encoder $VersionAdobe"
+    $RutaInstalacion = RUTA_INSTALACION
+    #Write-Host "La ruta que se usará es: [$RutaInstalacion]" **DEBUG**
     
-    $Idioma = Get-Content "$Env:Programfiles\$RutaInstalDefault\application.xml" | Where-Object {($_ -match $XmlAllLang1) -or ($_ -match $XmlAllLang2) -or ($_ -match $XmlEsEs) -or ($_ -match $XmlEsMx)}
-    $Contenido = Get-Content "$Env:Programfiles\$RutaInstalDefault\application.xml"
+    if ($RutaInstalacion -eq $RutaInstalAdobe) {
+        $RutaInstalacion = "$RutaInstalAdobe\$RutaInstalMe"
+    } elseif ($RutaInstalacion -ne $RutaInstalAdobe) {
+        $RutaInstalacion = "$RutaInstalacion"
+    }
+
+    $Idioma = Get-Content "$RutaInstalacion\AMT\application.xml" | Where-Object {($_ -match $XmlAllLang1) -or ($_ -match $XmlAllLang2) -or ($_ -match $XmlEsEs) -or ($_ -match $XmlEsMx)}
+    $Contenido = Get-Content "$RutaInstalacion\AMT\application.xml"
 
     if ($Idioma -match $XmlAllLang1) {
-        $Contenido.replace($XmlAllLang1,$XmlEnUs) | Set-Content "$Env:Programfiles\$RutaInstalDefault\application.xml"
+        $Contenido.replace($XmlAllLang1,$XmlEnUs) | Set-Content "$RutaInstalacion\AMT\application.xml"
         Write-Host $CambioSpaEng -Fore DarkGreen
         Start-Sleep -Seconds 1
     } elseif ($Idioma -match $XmlAllLang2) {
-        $Contenido.replace($XmlAllLang2,$XmlEnUs) | Set-Content "$Env:Programfiles\$RutaInstalDefault\application.xml"
+        $Contenido.replace($XmlAllLang2,$XmlEnUs) | Set-Content "$RutaInstalacion\AMT\application.xml"
         Write-Host $CambioSpaEng -Fore DarkGreen
         Start-Sleep -Seconds 1
     } elseif ($Idioma -match $XmlEsEs) {
-        $Contenido.replace($XmlEsEs,$XmlEnUs) | Set-Content "$Env:Programfiles\$RutaInstalDefault\application.xml"
+        $Contenido.replace($XmlEsEs,$XmlEnUs) | Set-Content "$RutaInstalacion\AMT\application.xml"
         Write-Host $CambioSpaEng -Fore DarkGreen
         Start-Sleep -Seconds 1
     } elseif ($Idioma -match $XmlEsMx) {
-        $Contenido.replace($XmlEsMx,$XmlEnUs) | Set-Content "$Env:Programfiles\$RutaInstalDefault\application.xml"
+        $Contenido.replace($XmlEsMx,$XmlEnUs) | Set-Content "$RutaInstalacion\AMT\application.xml"
         Write-Host $CambioSpaEng -Fore DarkGreen
         Start-Sleep -Seconds 1
     } else {
@@ -632,14 +721,23 @@ function MENU_ME_SPA_A_ENG {
 # Menú Photoshop, inglés a español
 function MENU_PS_ENG_A_SPA {
 
+    $RutaInstalPs = "Adobe Photoshop $VersionAdobe"
     $SourceDescarga = "$UrlLocales/ps/$VersionAdobe/$LocaleEsEs.zip"
-    $RutaInstalDefault = "$Env:Programfiles\Adobe\Adobe Photoshop $VersionAdobe\Locales"
     $DestinoDescarga = "$ScriptDir\idiomas_simi\ps\$VersionAdobe"
+    $RutaInstalacion = RUTA_INSTALACION
+    #Write-Host "La ruta que se usará es: [$RutaInstalacion]" **DEBUG**
+    
+    if ($RutaInstalacion -eq $RutaInstalAdobe) {
+        $RutaInstalacion = "$RutaInstalAdobe\$RutaInstalPs"
+    } elseif ($RutaInstalacion -ne $RutaInstalAdobe) {
+        $RutaInstalacion = "$RutaInstalacion"
+    }
 
-    if (-not ((Test-Path -Path "$RutaInstalDefault\$LocaleEsEs" -PathType Container) -or (Test-Path -Path "$RutaInstalDefault\$LocaleEsMx" -PathType Container))) {
+
+    if (-not ((Test-Path -Path "$RutaInstalacion\Locales\$LocaleEsEs" -PathType Container) -or (Test-Path -Path "$RutaInstalacion\Locales\$LocaleEsMx" -PathType Container))) {
         
         if ((Test-Path -Path "$DestinoDescarga\$LocaleEsEs.zip" -PathType Leaf) -or (Test-Path -Path "$DestinoDescarga\$LocaleEsMx.zip" -PathType Leaf)) {
-            Copy-Item -Path "$DestinoDescarga\$LocaleEsEs.zip" -Destination "$RutaInstalDefault\$LocaleEsEs.zip" -Force
+            Copy-Item -Path "$DestinoDescarga\$LocaleEsEs.zip" -Destination "$RutaInstalacion\Locales\$LocaleEsEs.zip" -Force
         } else {
             # Chequea si hay conexión a Internet
             while (!(Test-Connection -computer google.com -count 1 -quiet)) {
@@ -647,23 +745,24 @@ function MENU_PS_ENG_A_SPA {
                 Start-Sleep -Seconds 5
             }
             # Hay conexión
-            Write-Host $Descargando "(~600 KB)" -Fore Yellow
+            #Write-Host $Descargando "(~600 KB)" -Fore Yellow
+            TAMANIO_DESCARGA -Url $SourceDescarga
             $null = New-Item -Path $DestinoDescarga -ItemType Directory -Force
             Invoke-WebRequest -Uri $SourceDescarga -OutFile "$DestinoDescarga\$LocaleEsEs.zip"
-            Copy-Item -Path "$DestinoDescarga\$LocaleEsEs.zip" -Destination "$RutaInstalDefault\$LocaleEsEs.zip" -Force
+            Copy-Item -Path "$DestinoDescarga\$LocaleEsEs.zip" -Destination "$RutaInstalacion\Locales\$LocaleEsEs.zip" -Force
         }
 
         Write-Host $Cambiando -Fore Yellow        
         # Unzip, copy, replace and keeps encoding (https://gist.github.com/PrateekKumarSingh/1dc3765a50e0e0cced63574316382304)
-        [void](New-Item -Path "$RutaInstalDefault\$LocaleEsEs" -ItemType Directory -Force)
+        [void](New-Item -Path "$RutaInstalacion\Locales\$LocaleEsEs" -ItemType Directory -Force)
         $Shell = New-Object -com Shell.Application
-        $Shell.Namespace("$RutaInstalDefault\$LocaleEsEs").copyhere($Shell.NameSpace("$RutaInstalDefault\$LocaleEsEs.zip").Items(), 0x14) #0x14 overwrite AND silent
+        $Shell.Namespace("$RutaInstalacion\Locales\$LocaleEsEs").copyhere($Shell.NameSpace("$RutaInstalacion\Locales\$LocaleEsEs.zip").Items(), 0x14) #0x14 overwrite AND silent
 
-        Remove-Item "$RutaInstalDefault\$LocaleEsEs.zip" -Force -ErrorAction SilentlyContinue
+        Remove-Item "$RutaInstalacion\Locales\$LocaleEsEs.zip" -Force -ErrorAction SilentlyContinue
         Write-Host $CambioPs -Fore DarkGreen
         Start-Sleep -Seconds 1
 
-    } elseif ((Test-Path -Path "$RutaInstalDefault\$LocaleEsEs" -PathType Container) -or (Test-Path -Path "$RutaInstalDefault\$LocaleEsMx" -PathType Container)) {
+    } elseif ((Test-Path -Path "$RutaInstalacion\Locales\$LocaleEsEs" -PathType Container) -or (Test-Path -Path "$RutaInstalacion\Locales\$LocaleEsMx" -PathType Container)) {
         Write-Host $ErrorCambioPs -Fore Red
         Start-Sleep -Seconds 1
     }
@@ -678,14 +777,22 @@ function MENU_PS_ENG_A_SPA {
 # Menú Photoshop, español a inglés
 function MENU_PS_SPA_A_ENG {
 
+    $RutaInstalPs = "Adobe Photoshop $VersionAdobe"
     $SourceDescarga = "$UrlLocales/ps/$VersionAdobe/$LocaleEnUs.zip"
-    $RutaInstalDefault = "$Env:Programfiles\Adobe\Adobe Photoshop $VersionAdobe\Locales"
     $DestinoDescarga = "$ScriptDir\idiomas_simi\ps\$VersionAdobe"
+    $RutaInstalacion = RUTA_INSTALACION
+    #Write-Host "La ruta que se usará es: [$RutaInstalacion]" **DEBUG**
+    
+    if ($RutaInstalacion -eq $RutaInstalAdobe) {
+        $RutaInstalacion = "$RutaInstalAdobe\$RutaInstalPs"
+    } elseif ($RutaInstalacion -ne $RutaInstalAdobe) {
+        $RutaInstalacion = "$RutaInstalacion"
+    }
 
-    if (-not ((Test-Path -Path "$RutaInstalDefault\$LocaleEnUs" -PathType Container) -or (Test-Path -Path "$RutaInstalDefault\$LocaleEnGb" -PathType Container))) {
+    if (-not ((Test-Path -Path "$RutaInstalacion\Locales\$LocaleEnUs" -PathType Container) -or (Test-Path -Path "$RutaInstalacion\Locales\$LocaleEnGb" -PathType Container))) {
         
         if ((Test-Path -Path "$DestinoDescarga\$LocaleEnUs.zip" -PathType Leaf) -or (Test-Path -Path "$DestinoDescarga\$LocaleEnGb.zip" -PathType Leaf)) {
-            Copy-Item -Path "$DestinoDescarga\$LocaleEnUs.zip" -Destination "$RutaInstalDefault\$LocaleEnUs.zip" -Force
+            Copy-Item -Path "$DestinoDescarga\$LocaleEnUs.zip" -Destination "$RutaInstalacion\Locales\$LocaleEnUs.zip" -Force
         } else {
             # Chequea si hay conexión a Internet
             while (!(Test-Connection -computer google.com -count 1 -quiet)) {
@@ -693,23 +800,24 @@ function MENU_PS_SPA_A_ENG {
                 Start-Sleep -Seconds 5
             }
             # Hay conexión
-            Write-Host $Descargando "(~600 KB)" -Fore Yellow
+            #Write-Host $Descargando "(~600 KB)" -Fore Yellow
+            TAMANIO_DESCARGA -Url $SourceDescarga
             $null = New-Item -Path $DestinoDescarga -ItemType Directory -Force
             Invoke-WebRequest -Uri $SourceDescarga -OutFile "$DestinoDescarga\$LocaleEnUs.zip"
-            Copy-Item -Path "$DestinoDescarga\$LocaleEnUs.zip" -Destination "$RutaInstalDefault\$LocaleEnUs.zip" -Force
+            Copy-Item -Path "$DestinoDescarga\$LocaleEnUs.zip" -Destination "$RutaInstalacion\Locales\$LocaleEnUs.zip" -Force
         }
 
         Write-Host $Cambiando -Fore Yellow
 
-        [void](New-Item -Path "$RutaInstalDefault\$LocaleEnUs" -ItemType Directory -Force)
+        [void](New-Item -Path "$RutaInstalacion\Locales\$LocaleEnUs" -ItemType Directory -Force)
         $Shell = New-Object -com Shell.Application
-        $Shell.Namespace("$RutaInstalDefault\$LocaleEnUs").copyhere($Shell.NameSpace("$RutaInstalDefault\$LocaleEnUs.zip").Items(), 0x14)
+        $Shell.Namespace("$RutaInstalacion\Locales\$LocaleEnUs").copyhere($Shell.NameSpace("$RutaInstalacion\Locales\$LocaleEnUs.zip").Items(), 0x14)
 
-        Remove-Item "$RutaInstalDefault\$LocaleEnUs.zip" -Force -ErrorAction SilentlyContinue
+        Remove-Item "$RutaInstalacion\Locales\$LocaleEnUs.zip" -Force -ErrorAction SilentlyContinue
         Write-Host $CambioPs -Fore DarkGreen
         Start-Sleep -Seconds 1
 
-    } elseif ((Test-Path -Path "$RutaInstalDefault\$LocaleEnUs" -PathType Container) -or (Test-Path -Path "$RutaInstalDefault\$LocaleEnGb" -PathType Container)) {
+    } elseif ((Test-Path -Path "$RutaInstalacion\Locales\$LocaleEnUs" -PathType Container) -or (Test-Path -Path "$RutaInstalacion\Locales\$LocaleEnGb" -PathType Container)) {
         Write-Host $ErrorCambioPs -Fore Red
         Start-Sleep -Seconds 1
     }
@@ -723,26 +831,33 @@ function MENU_PS_SPA_A_ENG {
 
 # Menú Animate, inglés a español
 function MENU_ANI_ENG_A_SPA {
-
-    $RutaInstalDefault1 = "Adobe\Adobe Animate $VersionAdobe\AMT"
-    $RutaInstalDefault2 = "$Env:Programfiles\Adobe\Adobe Animate $VersionAdobe"
+    
+    $RutaInstalAni = "Adobe Animate $VersionAdobe"
     $SourceDescarga = "$UrlLocales/ani/$VersionAdobe/$LocaleEsEs.zip"
     $DestinoDescarga = "$ScriptDir\idiomas_simi\ani\$VersionAdobe"
+    $RutaInstalacion = RUTA_INSTALACION
+    #Write-Host "La ruta que se usará es: [$RutaInstalacion]" **DEBUG**
+    
+    if ($RutaInstalacion -eq $RutaInstalAdobe) {
+        $RutaInstalacion = "$RutaInstalAdobe\$RutaInstalAni"
+    } elseif ($RutaInstalacion -ne $RutaInstalAdobe) {
+        $RutaInstalacion = "$RutaInstalacion"
+    }
 
-    $IdiomaEng = Get-Content "$Env:Programfiles\$RutaInstalDefault1\application.xml" | Where-Object {($_ -match $XmlEnUs) -or ($_ -match $XmlEnGb)}
-    $IdiomaSpa = Get-Content "$Env:Programfiles\$RutaInstalDefault1\application.xml" | Where-Object {($_ -match $XmlEsEs) -or ($_ -match $XmlEsMx)}
-    $Contenido = Get-Content "$Env:Programfiles\$RutaInstalDefault1\application.xml"
+    $IdiomaEng = Get-Content "$RutaInstalacion\AMT\application.xml" | Where-Object {($_ -match $XmlEnUs) -or ($_ -match $XmlEnGb)}
+    $IdiomaSpa = Get-Content "$RutaInstalacion\AMT\application.xml" | Where-Object {($_ -match $XmlEsEs) -or ($_ -match $XmlEsMx)}
+    $Contenido = Get-Content "$RutaInstalacion\AMT\application.xml"
 
     if ( ($IdiomaEng -match $XmlEnUs) -or ($IdiomaEng -match $XmlEnUs) ) {
 
-        if ( (($IdiomaEng -match $XmlEnUs) -and (Test-Path -Path "$RutaInstalDefault2\$LocaleEnUs" -PathType Container)) ) {
-            $Contenido.replace($XmlEnUs,$XmlEsEs) | Set-Content "$Env:Programfiles\$RutaInstalDefault1\application.xml"
-        } elseif ( (($IdiomaEng -match $XmlEnGb) -and (Test-Path -Path "$RutaInstalDefault2\$LocaleEnGb" -PathType Container)) ) {
-            $Contenido.replace($XmlEnGb,$XmlEsEs) | Set-Content "$Env:Programfiles\$RutaInstalDefault1\application.xml"
+        if ( (($IdiomaEng -match $XmlEnUs) -and (Test-Path -Path "$RutaInstalacion\$LocaleEnUs" -PathType Container)) ) {
+            $Contenido.replace($XmlEnUs,$XmlEsEs) | Set-Content "$RutaInstalacion\AMT\application.xml"
+        } elseif ( (($IdiomaEng -match $XmlEnGb) -and (Test-Path -Path "$RutaInstalacion\$LocaleEnGb" -PathType Container)) ) {
+            $Contenido.replace($XmlEnGb,$XmlEsEs) | Set-Content "$RutaInstalacion\AMT\application.xml"
         }
 
         if ( (Test-Path -Path "$DestinoDescarga\$LocaleEsEs.zip" -PathType Leaf) -or (Test-Path -Path "$DestinoDescarga\$LocaleEsMx.zip" -PathType Leaf) ) {
-            Copy-Item -Path "$DestinoDescarga\$LocaleEsEs.zip" -Destination "$RutaInstalDefault2\$LocaleEsEs.zip" -Force
+            Copy-Item -Path "$DestinoDescarga\$LocaleEsEs.zip" -Destination "$RutaInstalacion\$LocaleEsEs.zip" -Force
         } else {
             # Chequea si hay conexión a Internet
             while (!(Test-Connection -computer google.com -count 1 -quiet)) {
@@ -750,19 +865,20 @@ function MENU_ANI_ENG_A_SPA {
                 Start-Sleep -Seconds 5
             }
             # Hay conexión
-            Write-Host $Descargando "(~4,5 MB)" -Fore Yellow
+            #Write-Host $Descargando "(~4,5 MB)" -Fore Yellow
+            TAMANIO_DESCARGA -Url $SourceDescarga
             $null = New-Item -Path $DestinoDescarga -ItemType Directory -Force
             Invoke-WebRequest -Uri $SourceDescarga -OutFile "$DestinoDescarga\$LocaleEsEs.zip"
-            Copy-Item -Path "$DestinoDescarga\$LocaleEsEs.zip" -Destination "$RutaInstalDefault2\$LocaleEsEs.zip" -Force
+            Copy-Item -Path "$DestinoDescarga\$LocaleEsEs.zip" -Destination "$RutaInstalacion\$LocaleEsEs.zip" -Force
         }
 
         Write-Host $Cambiando -Fore Yellow
 
-        [void](New-Item -Path "$RutaInstalDefault2\$LocaleEsEs" -ItemType Directory -Force)
+        [void](New-Item -Path "$RutaInstalacion\$LocaleEsEs" -ItemType Directory -Force)
         $Shell = New-Object -com Shell.Application
-        $Shell.Namespace("$RutaInstalDefault2\$LocaleEsEs").copyhere($Shell.NameSpace("$RutaInstalDefault2\$LocaleEsEs.zip").Items(), 0x14)
+        $Shell.Namespace("$RutaInstalacion\$LocaleEsEs").copyhere($Shell.NameSpace("$RutaInstalacion\$LocaleEsEs.zip").Items(), 0x14)
 
-        Remove-Item "$RutaInstalDefault2\$LocaleEsEs.zip" -Force -ErrorAction SilentlyContinue
+        Remove-Item "$RutaInstalacion\$LocaleEsEs.zip" -Force -ErrorAction SilentlyContinue
         Write-Host $CambioEngSpa -Fore DarkGreen
         Start-Sleep -Seconds 1
 
@@ -783,25 +899,32 @@ function MENU_ANI_ENG_A_SPA {
 # Menú Animate, español a inglés
 function MENU_ANI_SPA_A_ENG {
 
-    $RutaInstalDefault1 = "Adobe\Adobe Animate $VersionAdobe\AMT"
-    $RutaInstalDefault2 = "$Env:Programfiles\Adobe\Adobe Animate $VersionAdobe"
+    $RutaInstalAni = "Adobe Animate $VersionAdobe"
     $SourceDescarga = "$UrlLocales/ani/$VersionAdobe/$LocaleEnUs.zip"
     $DestinoDescarga = "$ScriptDir\idiomas_simi\ani\$VersionAdobe"
+    $RutaInstalacion = RUTA_INSTALACION
+    #Write-Host "La ruta que se usará es: [$RutaInstalacion]" **DEBUG**
+    
+    if ($RutaInstalacion -eq $RutaInstalAdobe) {
+        $RutaInstalacion = "$RutaInstalAdobe\$RutaInstalAni"
+    } elseif ($RutaInstalacion -ne $RutaInstalAdobe) {
+        $RutaInstalacion = "$RutaInstalacion"
+    }
 
-    $IdiomaEng = Get-Content "$Env:Programfiles\$RutaInstalDefault1\application.xml" | Where-Object {($_ -match $XmlEnUs) -or ($_ -match $XmlEnGb)}
-    $IdiomaSpa = Get-Content "$Env:Programfiles\$RutaInstalDefault1\application.xml" | Where-Object {($_ -match $XmlEsEs) -or ($_ -match $XmlEsMx)}
-    $Contenido = Get-Content "$Env:Programfiles\$RutaInstalDefault1\application.xml"
+    $IdiomaEng = Get-Content "$RutaInstalacion\AMT\application.xml" | Where-Object {($_ -match $XmlEnUs) -or ($_ -match $XmlEnGb)}
+    $IdiomaSpa = Get-Content "$RutaInstalacion\AMT\application.xml" | Where-Object {($_ -match $XmlEsEs) -or ($_ -match $XmlEsMx)}
+    $Contenido = Get-Content "$RutaInstalacion\AMT\application.xml"
 
     if ( ($IdiomaSpa -match $XmlEsEs) -or ($IdiomaSpa -match $XmlEsMx) ) {
 
-        if ( (($IdiomaSpa -match $XmlEsEs) -and (Test-Path -Path "$RutaInstalDefault2\$LocaleEsEs" -PathType Container)) ) {
-            $Contenido.replace($XmlEsEs,$XmlEnUs) | Set-Content "$Env:Programfiles\$RutaInstalDefault1\application.xml"
-        } elseif ( (($IdiomaSpa -match $XmlEsMx) -and (Test-Path -Path "$RutaInstalDefault2\$LocaleEsMx" -PathType Container)) ) {
-            $Contenido.replace($XmlEsMx,$XmlEnUs) | Set-Content "$Env:Programfiles\$RutaInstalDefault1\application.xml"
+        if ( (($IdiomaSpa -match $XmlEsEs) -and (Test-Path -Path "$RutaInstalacion\$LocaleEsEs" -PathType Container)) ) {
+            $Contenido.replace($XmlEsEs,$XmlEnUs) | Set-Content "$RutaInstalacion\AMT\application.xml"
+        } elseif ( (($IdiomaSpa -match $XmlEsMx) -and (Test-Path -Path "$RutaInstalacion\$LocaleEsMx" -PathType Container)) ) {
+            $Contenido.replace($XmlEsMx,$XmlEnUs) | Set-Content "$RutaInstalacion\AMT\application.xml"
         }
 
         if ( (Test-Path -Path "$DestinoDescarga\$LocaleEnUs.zip" -PathType Leaf) -or (Test-Path -Path "$DestinoDescarga\$LocaleEnGb.zip" -PathType Leaf) ) {
-            Copy-Item -Path "$DestinoDescarga\$LocaleEnUs.zip" -Destination "$RutaInstalDefault2\$LocaleEnUs.zip" -Force
+            Copy-Item -Path "$DestinoDescarga\$LocaleEnUs.zip" -Destination "$RutaInstalacion\$LocaleEnUs.zip" -Force
         } else {
             # Chequea si hay conexión a Internet
             while (!(Test-Connection -computer google.com -count 1 -quiet)) {
@@ -809,19 +932,20 @@ function MENU_ANI_SPA_A_ENG {
                 Start-Sleep -Seconds 5
             }
             # Hay conexión
-            Write-Host $Descargando "(~4,5 MB)" -Fore Yellow
+            #Write-Host $Descargando "(~4,5 MB)" -Fore Yellow
+            TAMANIO_DESCARGA -Url $SourceDescarga
             $null = New-Item -Path $DestinoDescarga -ItemType Directory -Force
             Invoke-WebRequest -Uri $SourceDescarga -OutFile "$DestinoDescarga\$LocaleEnUs.zip"
-            Copy-Item -Path "$DestinoDescarga\$LocaleEnUs.zip" -Destination "$RutaInstalDefault2\$LocaleEnUs.zip" -Force
+            Copy-Item -Path "$DestinoDescarga\$LocaleEnUs.zip" -Destination "$RutaInstalacion\$LocaleEnUs.zip" -Force
         }
 
         Write-Host $Cambiando -Fore Yellow
 
-        [void](New-Item -Path "$RutaInstalDefault2\$LocaleEnUs" -ItemType Directory -Force)
+        [void](New-Item -Path "$RutaInstalacion\$LocaleEnUs" -ItemType Directory -Force)
         $Shell = New-Object -com Shell.Application
-        $Shell.Namespace("$RutaInstalDefault2\$LocaleEnUs").copyhere($Shell.NameSpace("$RutaInstalDefault2\$LocaleEnUs.zip").Items(), 0x14)
+        $Shell.Namespace("$RutaInstalacion\$LocaleEnUs").copyhere($Shell.NameSpace("$RutaInstalacion\$LocaleEnUs.zip").Items(), 0x14)
 
-        Remove-Item "$RutaInstalDefault2\$LocaleEnUs.zip" -Force -ErrorAction SilentlyContinue
+        Remove-Item "$RutaInstalacion\$LocaleEnUs.zip" -Force -ErrorAction SilentlyContinue
         Write-Host $CambioSpaEng -Fore DarkGreen
         Start-Sleep -Seconds 1
 
@@ -842,26 +966,32 @@ function MENU_ANI_SPA_A_ENG {
 # Menú Illustrator, inglés a español
 function MENU_ILU_ENG_A_SPA {
 
-    $RutaInstalDefault1 = "Adobe\Adobe Illustrator $VersionAdobe\Support Files\Contents\Windows\AMT"
-    $RutaInstalDefault2 = "$Env:Programfiles\Adobe\Adobe Illustrator $VersionAdobe"
-    $RutaInstalDefault3 = "$Env:Programfiles\Adobe\Adobe Illustrator $VersionAdobe\Support Files\Contents\Windows"
+    $RutaInstalIlu = "Adobe Illustrator $VersionAdobe"
     $SourceDescarga = "$UrlLocales/il/$VersionAdobe/$LocaleEsEs.zip"
     $DestinoDescarga = "$ScriptDir\idiomas_simi\il\$VersionAdobe"
+    $RutaInstalacion = RUTA_INSTALACION
+    #Write-Host "La ruta que se usará es: [$RutaInstalacion]" **DEBUG**
+    
+    if ($RutaInstalacion -eq $RutaInstalAdobe) {
+        $RutaInstalacion = "$RutaInstalAdobe\$RutaInstalIlu"
+    } elseif ($RutaInstalacion -ne $RutaInstalAdobe) {
+        $RutaInstalacion = "$RutaInstalacion"
+    }
 
-    $IdiomaEng = Get-Content "$Env:Programfiles\$RutaInstalDefault1\application.xml" | Where-Object {($_ -match $XmlEnUs) -or ($_ -match $XmlEnGb)}
-    $IdiomaSpa = Get-Content "$Env:Programfiles\$RutaInstalDefault1\application.xml" | Where-Object {($_ -match $XmlEsEs) -or ($_ -match $XmlEsMx)}
-    $Contenido = Get-Content "$Env:Programfiles\$RutaInstalDefault1\application.xml"
+    $IdiomaEng = Get-Content "$RutaInstalacion\Support Files\Contents\Windows\AMT\application.xml" | Where-Object {($_ -match $XmlEnUs) -or ($_ -match $XmlEnGb)}
+    $IdiomaSpa = Get-Content "$RutaInstalacion\Support Files\Contents\Windows\AMT\application.xml" | Where-Object {($_ -match $XmlEsEs) -or ($_ -match $XmlEsMx)}
+    $Contenido = Get-Content "$RutaInstalacion\Support Files\Contents\Windows\AMT\application.xml"
 
     if ( ($IdiomaEng -match $XmlEnUs) -or ($IdiomaEng -match $XmlEnGb) ) {
 
-        if ( (($IdiomaEng -match $XmlEnUs) -and (Test-Path -Path "$RutaInstalDefault3\$LocaleEnUs" -PathType Container)) ) {
-            $Contenido.replace($XmlEnUs,$XmlEsEs) | Set-Content "$Env:Programfiles\$RutaInstalDefault1\application.xml"
-        } elseif ( (($IdiomaEng -match $XmlEnGb) -and (Test-Path -Path "$RutaInstalDefault3\$LocaleEnGb" -PathType Container)) ) {
-            $Contenido.replace($XmlEnGb,$XmlEsEs) | Set-Content "$Env:Programfiles\$RutaInstalDefault1\application.xml"
+        if ( (($IdiomaEng -match $XmlEnUs) -and (Test-Path -Path "$RutaInstalacion\Support Files\Contents\Windows\$LocaleEnUs" -PathType Container)) ) {
+            $Contenido.replace($XmlEnUs,$XmlEsEs) | Set-Content "$RutaInstalacion\Support Files\Contents\Windows\AMT\application.xml"
+        } elseif ( (($IdiomaEng -match $XmlEnGb) -and (Test-Path -Path "$RutaInstalacion\Support Files\Contents\Windows\$LocaleEnGb" -PathType Container)) ) {
+            $Contenido.replace($XmlEnGb,$XmlEsEs) | Set-Content "$RutaInstalacion\Support Files\Contents\Windows\AMT\application.xml"
         }
 
         if ( (Test-Path -Path "$DestinoDescarga\$LocaleEsEs.zip" -PathType Leaf) -or (Test-Path -Path "$DestinoDescarga\$LocaleEsMx.zip" -PathType Leaf) ) {
-            Copy-Item -Path "$DestinoDescarga\$LocaleEsEs.zip" -Destination "$RutaInstalDefault2\$LocaleEsEs.zip" -Force
+            Copy-Item -Path "$DestinoDescarga\$LocaleEsEs.zip" -Destination "$RutaInstalacion\$LocaleEsEs.zip" -Force
         } else {
             # Chequea si hay conexión a Internet
             while (!(Test-Connection -computer google.com -count 1 -quiet)) {
@@ -869,18 +999,19 @@ function MENU_ILU_ENG_A_SPA {
                 Start-Sleep -Seconds 5
             }
             # Hay conexión
-            Write-Host $Descargando "(~27,5 MB)" -Fore Yellow
+            #Write-Host $Descargando "(~27,5 MB)" -Fore Yellow
+            TAMANIO_DESCARGA -Url $SourceDescarga
             $null = New-Item -Path $DestinoDescarga -ItemType Directory -Force
             Invoke-WebRequest -Uri $SourceDescarga -OutFile "$DestinoDescarga\$LocaleEsEs.zip"
-            Copy-Item -Path "$DestinoDescarga\$LocaleEsEs.zip" -Destination "$RutaInstalDefault2\$LocaleEsEs.zip" -Force
+            Copy-Item -Path "$DestinoDescarga\$LocaleEsEs.zip" -Destination "$RutaInstalacion\$LocaleEsEs.zip" -Force
         }
 
         Write-Host $Cambiando -Fore Yellow
 
         $Shell = New-Object -com Shell.Application
-        $Shell.Namespace("$RutaInstalDefault2").copyhere($Shell.NameSpace("$RutaInstalDefault2\$LocaleEsEs.zip").Items(), 0x14)
+        $Shell.Namespace("$RutaInstalacion").copyhere($Shell.NameSpace("$RutaInstalacion\$LocaleEsEs.zip").Items(), 0x14)
 
-        Remove-Item "$RutaInstalDefault2\$LocaleEsEs.zip" -Force -ErrorAction SilentlyContinue
+        Remove-Item "$RutaInstalacion\$LocaleEsEs.zip" -Force -ErrorAction SilentlyContinue
         Write-Host $CambioEngSpa -Fore DarkGreen
         Start-Sleep -Seconds 1
 
@@ -901,26 +1032,32 @@ function MENU_ILU_ENG_A_SPA {
 # Menú Illustrator, español a inglés
 function MENU_ILU_SPA_A_ENG {
 
-    $RutaInstalDefault1 = "Adobe\Adobe Illustrator $VersionAdobe\Support Files\Contents\Windows\AMT"
-    $RutaInstalDefault2 = "$Env:Programfiles\Adobe\Adobe Illustrator $VersionAdobe"
-    $RutaInstalDefault3 = "$Env:Programfiles\Adobe\Adobe Illustrator $VersionAdobe\Support Files\Contents\Windows"
+    $RutaInstalIlu = "Adobe Illustrator $VersionAdobe"
     $SourceDescarga = "$UrlLocales/il/$VersionAdobe/$LocaleEnUs.zip"
     $DestinoDescarga = "$ScriptDir\idiomas_simi\il\$VersionAdobe"
+    $RutaInstalacion = RUTA_INSTALACION
+    #Write-Host "La ruta que se usará es: [$RutaInstalacion]" **DEBUG**
+    
+    if ($RutaInstalacion -eq $RutaInstalAdobe) {
+        $RutaInstalacion = "$RutaInstalAdobe\$RutaInstalIlu"
+    } elseif ($RutaInstalacion -ne $RutaInstalAdobe) {
+        $RutaInstalacion = "$RutaInstalacion"
+    }
 
-    $IdiomaEng = Get-Content "$Env:Programfiles\$RutaInstalDefault1\application.xml" | Where-Object {($_ -match $XmlEnUs) -or ($_ -match $XmlEnGb)}
-    $IdiomaSpa = Get-Content "$Env:Programfiles\$RutaInstalDefault1\application.xml" | Where-Object {($_ -match $XmlEsEs) -or ($_ -match $XmlEsMx)}
-    $Contenido = Get-Content "$Env:Programfiles\$RutaInstalDefault1\application.xml"
+    $IdiomaEng = Get-Content "$RutaInstalacion\Support Files\Contents\Windows\AMT\application.xml" | Where-Object {($_ -match $XmlEnUs) -or ($_ -match $XmlEnGb)}
+    $IdiomaSpa = Get-Content "$RutaInstalacion\Support Files\Contents\Windows\AMT\application.xml" | Where-Object {($_ -match $XmlEsEs) -or ($_ -match $XmlEsMx)}
+    $Contenido = Get-Content "$RutaInstalacion\Support Files\Contents\Windows\AMT\application.xml"
 
     if ( ($IdiomaSpa -match $XmlEsEs) -or ($IdiomaSpa -match $XmlEsMx) ) {
 
-        if ( (($IdiomaSpa -match $XmlEsEs) -and (Test-Path -Path "$RutaInstalDefault3\$LocaleEsEs" -PathType Container)) ) {
-            $Contenido.replace($XmlEsEs,$XmlEnUs) | Set-Content "$Env:Programfiles\$RutaInstalDefault1\application.xml"
-        } elseif ( (($IdiomaSpa -match $XmlEsMx) -and (Test-Path -Path "$RutaInstalDefault3\$LocaleEsMx" -PathType Container)) ) {
-            $Contenido.replace($XmlEsMx,$XmlEnUs) | Set-Content "$Env:Programfiles\$RutaInstalDefault1\application.xml"
+        if ( (($IdiomaSpa -match $XmlEsEs) -and (Test-Path -Path "$RutaInstalacion\Support Files\Contents\Windows\$LocaleEsEs" -PathType Container)) ) {
+            $Contenido.replace($XmlEsEs,$XmlEnUs) | Set-Content "$RutaInstalacion\Support Files\Contents\Windows\AMT\application.xml"
+        } elseif ( (($IdiomaSpa -match $XmlEsMx) -and (Test-Path -Path "$RutaInstalacion\Support Files\Contents\Windows\$LocaleEsMx" -PathType Container)) ) {
+            $Contenido.replace($XmlEsMx,$XmlEnUs) | Set-Content "$RutaInstalacion\Support Files\Contents\Windows\AMT\application.xml"
         }
 
         if ( (Test-Path -Path "$DestinoDescarga\$LocaleEnUs.zip" -PathType Leaf) -or (Test-Path -Path "$DestinoDescarga\$LocaleEnGb.zip" -PathType Leaf) ) {
-            Copy-Item -Path "$DestinoDescarga\$LocaleEnUs.zip" -Destination "$RutaInstalDefault2\$LocaleEnUs.zip" -Force
+            Copy-Item -Path "$DestinoDescarga\$LocaleEnUs.zip" -Destination "$RutaInstalacion\$LocaleEnUs.zip" -Force
         } else {
             # Chequea si hay conexión a Internet
             while (!(Test-Connection -computer google.com -count 1 -quiet)) {
@@ -928,18 +1065,19 @@ function MENU_ILU_SPA_A_ENG {
                 Start-Sleep -Seconds 5
             }
             # Hay conexión
-            Write-Host $Descargando "(~27,5 MB)" -Fore Yellow
+            #Write-Host $Descargando "(~27,5 MB)" -Fore Yellow
+            TAMANIO_DESCARGA -Url $SourceDescarga
             $null = New-Item -Path $DestinoDescarga -ItemType Directory -Force
             Invoke-WebRequest -Uri $SourceDescarga -OutFile "$DestinoDescarga\$LocaleEnUs.zip"
-            Copy-Item -Path "$DestinoDescarga\$LocaleEnUs.zip" -Destination "$RutaInstalDefault2\$LocaleEnUs.zip" -Force
+            Copy-Item -Path "$DestinoDescarga\$LocaleEnUs.zip" -Destination "$RutaInstalacion\$LocaleEnUs.zip" -Force
         }
 
         Write-Host $Cambiando -Fore Yellow
 
         $Shell = New-Object -com Shell.Application
-        $Shell.Namespace("$RutaInstalDefault2").copyhere($Shell.NameSpace("$RutaInstalDefault2\$LocaleEnUs.zip").Items(), 0x14)
+        $Shell.Namespace("$RutaInstalacion").copyhere($Shell.NameSpace("$RutaInstalacion\$LocaleEnUs.zip").Items(), 0x14)
 
-        Remove-Item "$RutaInstalDefault2\$LocaleEnUs.zip" -Force -ErrorAction SilentlyContinue
+        Remove-Item "$RutaInstalacion\$LocaleEnUs.zip" -Force -ErrorAction SilentlyContinue
         Write-Host $CambioSpaEng -Fore DarkGreen
         Start-Sleep -Seconds 1
 
@@ -960,26 +1098,32 @@ function MENU_ILU_SPA_A_ENG {
 # Menú InCopy, inglés a español
 function MENU_INC_ENG_A_SPA {
 
-    $RutaInstalDefault1 = "Adobe\Adobe InCopy $VersionAdobe\AMT"
-    $RutaInstalDefault2 = "$Env:Programfiles\Adobe\Adobe InCopy $VersionAdobe"
-    $RutaInstalDefault3 = "$Env:Programfiles\Adobe\Adobe InCopy $VersionAdobe\Presets\InCopy_Workspaces"
+    $RutaInstalInc = "Adobe InCopy $VersionAdobe"
     $SourceDescarga = "$UrlLocales/inc/$VersionAdobe/$LocaleEsEs.zip"
     $DestinoDescarga = "$ScriptDir\idiomas_simi\inc\$VersionAdobe"
+    $RutaInstalacion = RUTA_INSTALACION
+    #Write-Host "La ruta que se usará es: [$RutaInstalacion]" **DEBUG**
+    
+    if ($RutaInstalacion -eq $RutaInstalAdobe) {
+        $RutaInstalacion = "$RutaInstalAdobe\$RutaInstalInc"
+    } elseif ($RutaInstalacion -ne $RutaInstalAdobe) {
+        $RutaInstalacion = "$RutaInstalacion"
+    }
 
-    $IdiomaEng = Get-Content "$Env:Programfiles\$RutaInstalDefault1\application.xml" | Where-Object {($_ -match $XmlEnUs) -or ($_ -match $XmlEnGb)}
-    $IdiomaSpa = Get-Content "$Env:Programfiles\$RutaInstalDefault1\application.xml" | Where-Object {($_ -match $XmlEsEs) -or ($_ -match $XmlEsMx)}
-    $Contenido = Get-Content "$Env:Programfiles\$RutaInstalDefault1\application.xml"
+    $IdiomaEng = Get-Content "$RutaInstalacion\AMT\application.xml" | Where-Object {($_ -match $XmlEnUs) -or ($_ -match $XmlEnGb)}
+    $IdiomaSpa = Get-Content "$RutaInstalacion\AMT\application.xml" | Where-Object {($_ -match $XmlEsEs) -or ($_ -match $XmlEsMx)}
+    $Contenido = Get-Content "$RutaInstalacion\AMT\application.xml"
 
     if ( ($IdiomaEng -match $XmlEnUs) -or ($IdiomaEng -match $XmlEnGb) ) {
 
-        if ( (($IdiomaEng -match $XmlEnUs) -and (Test-Path -Path "$RutaInstalDefault3\$LocaleEnUs" -PathType Container)) ) {
-            $Contenido.replace($XmlEnUs,$XmlEsEs) | Set-Content "$Env:Programfiles\$RutaInstalDefault1\application.xml"
-        } elseif ( (($IdiomaEng -match $XmlEnGb) -and (Test-Path -Path "$RutaInstalDefault3\$LocaleEnGb" -PathType Container)) ) {
-            $Contenido.replace($XmlEnGb,$XmlEsEs) | Set-Content "$Env:Programfiles\$RutaInstalDefault1\application.xml"
+        if ( (($IdiomaEng -match $XmlEnUs) -and (Test-Path -Path "$RutaInstalacion\Presets\InCopy_Workspaces\$LocaleEnUs" -PathType Container)) ) {
+            $Contenido.replace($XmlEnUs,$XmlEsEs) | Set-Content "$RutaInstalacion\AMT\application.xml"
+        } elseif ( (($IdiomaEng -match $XmlEnGb) -and (Test-Path -Path "$RutaInstalacion\Presets\InCopy_Workspaces\$LocaleEnGb" -PathType Container)) ) {
+            $Contenido.replace($XmlEnGb,$XmlEsEs) | Set-Content "$RutaInstalacion\AMT\application.xml"
         }
 
         if ( (Test-Path -Path "$DestinoDescarga\$LocaleEsEs.zip" -PathType Leaf) -or (Test-Path -Path "$DestinoDescarga\$LocaleEsMx.zip" -PathType Leaf) ) {
-            Copy-Item -Path "$DestinoDescarga\$LocaleEsEs.zip" -Destination "$RutaInstalDefault2\$LocaleEsEs.zip" -Force
+            Copy-Item -Path "$DestinoDescarga\$LocaleEsEs.zip" -Destination "$RutaInstalacion\$LocaleEsEs.zip" -Force
         } else {
             # Chequea si hay conexión a Internet
             while (!(Test-Connection -computer google.com -count 1 -quiet)) {
@@ -987,18 +1131,19 @@ function MENU_INC_ENG_A_SPA {
                 Start-Sleep -Seconds 5
             }
             # Hay conexión
-            Write-Host $Descargando "(~70 KB)" -Fore Yellow
+            #Write-Host $Descargando "(~70 KB)" -Fore Yellow
+            TAMANIO_DESCARGA -Url $SourceDescarga
             $null = New-Item -Path $DestinoDescarga -ItemType Directory -Force
             Invoke-WebRequest -Uri $SourceDescarga -OutFile "$DestinoDescarga\$LocaleEsEs.zip"
-            Copy-Item -Path "$DestinoDescarga\$LocaleEsEs.zip" -Destination "$RutaInstalDefault2\$LocaleEsEs.zip" -Force
+            Copy-Item -Path "$DestinoDescarga\$LocaleEsEs.zip" -Destination "$RutaInstalacion\$LocaleEsEs.zip" -Force
         }
 
         Write-Host $Cambiando -Fore Yellow
 
         $Shell = New-Object -com Shell.Application
-        $Shell.Namespace("$RutaInstalDefault2").copyhere($Shell.NameSpace("$RutaInstalDefault2\$LocaleEsEs.zip").Items(), 0x14)
+        $Shell.Namespace("$RutaInstalacion").copyhere($Shell.NameSpace("$RutaInstalacion\$LocaleEsEs.zip").Items(), 0x14)
 
-        Remove-Item "$RutaInstalDefault2\$LocaleEsEs.zip" -Force -ErrorAction SilentlyContinue
+        Remove-Item "$RutaInstalacion\$LocaleEsEs.zip" -Force -ErrorAction SilentlyContinue
         Write-Host $CambioEngSpa -Fore DarkGreen
         Start-Sleep -Seconds 1
 
@@ -1019,26 +1164,32 @@ function MENU_INC_ENG_A_SPA {
 # Menú InCopy, español a inglés
 function MENU_INC_SPA_A_ENG {
 
-    $RutaInstalDefault1 = "Adobe\Adobe InCopy $VersionAdobe\AMT"
-    $RutaInstalDefault2 = "$Env:Programfiles\Adobe\Adobe InCopy $VersionAdobe"
-    $RutaInstalDefault3 = "$Env:Programfiles\Adobe\Adobe InCopy $VersionAdobe\Presets\InCopy_Workspaces"
+    $RutaInstalInc = "Adobe InCopy $VersionAdobe"
     $SourceDescarga = "$UrlLocales/inc/$VersionAdobe/$LocaleEnUs.zip"
     $DestinoDescarga = "$ScriptDir\idiomas_simi\inc\$VersionAdobe"
+    $RutaInstalacion = RUTA_INSTALACION
+    #Write-Host "La ruta que se usará es: [$RutaInstalacion]" **DEBUG**
+    
+    if ($RutaInstalacion -eq $RutaInstalAdobe) {
+        $RutaInstalacion = "$RutaInstalAdobe\$RutaInstalInc"
+    } elseif ($RutaInstalacion -ne $RutaInstalAdobe) {
+        $RutaInstalacion = "$RutaInstalacion"
+    }
 
-    $IdiomaEng = Get-Content "$Env:Programfiles\$RutaInstalDefault1\application.xml" | Where-Object {($_ -match $XmlEnUs) -or ($_ -match $XmlEnGb)}
-    $IdiomaSpa = Get-Content "$Env:Programfiles\$RutaInstalDefault1\application.xml" | Where-Object {($_ -match $XmlEsEs) -or ($_ -match $XmlEsMx)}
-    $Contenido = Get-Content "$Env:Programfiles\$RutaInstalDefault1\application.xml"
+    $IdiomaEng = Get-Content "$RutaInstalacion\AMT\application.xml" | Where-Object {($_ -match $XmlEnUs) -or ($_ -match $XmlEnGb)}
+    $IdiomaSpa = Get-Content "$RutaInstalacion\AMT\application.xml" | Where-Object {($_ -match $XmlEsEs) -or ($_ -match $XmlEsMx)}
+    $Contenido = Get-Content "$RutaInstalacion\AMT\application.xml"
 
     if ( ($IdiomaSpa -match $XmlEsEs) -or ($IdiomaSpa -match $XmlEsMx) ) {
 
-        if ( (($IdiomaSpa -match $XmlEsEs) -and (Test-Path -Path "$RutaInstalDefault3\$LocaleEsEs" -PathType Container)) ) {
-            $Contenido.replace($XmlEsEs,$XmlEnUs) | Set-Content "$Env:Programfiles\$RutaInstalDefault1\application.xml"
-        } elseif ( (($IdiomaSpa -match $XmlEsMx) -and (Test-Path -Path "$RutaInstalDefault3\$LocaleEsMx" -PathType Container)) ) {
-            $Contenido.replace($XmlEsMx,$XmlEnUs) | Set-Content "$Env:Programfiles\$RutaInstalDefault1\application.xml"
+        if ( (($IdiomaSpa -match $XmlEsEs) -and (Test-Path -Path "$RutaInstalacion\Presets\InCopy_Workspaces\$LocaleEsEs" -PathType Container)) ) {
+            $Contenido.replace($XmlEsEs,$XmlEnUs) | Set-Content "$RutaInstalacion\AMT\application.xml"
+        } elseif ( (($IdiomaSpa -match $XmlEsMx) -and (Test-Path -Path "$RutaInstalacion\Presets\InCopy_Workspaces\$LocaleEsMx" -PathType Container)) ) {
+            $Contenido.replace($XmlEsMx,$XmlEnUs) | Set-Content "$RutaInstalacion\AMT\application.xml"
         }
 
         if ( (Test-Path -Path "$DestinoDescarga\$LocaleEnUs.zip" -PathType Leaf) -or (Test-Path -Path "$DestinoDescarga\$LocaleEnGb.zip" -PathType Leaf) ) {
-            Copy-Item -Path "$DestinoDescarga\$LocaleEnUs.zip" -Destination "$RutaInstalDefault2\$LocaleEnUs.zip" -Force
+            Copy-Item -Path "$DestinoDescarga\$LocaleEnUs.zip" -Destination "$RutaInstalacion\$LocaleEnUs.zip" -Force
         } else {
             # Chequea si hay conexión a Internet
             while (!(Test-Connection -computer google.com -count 1 -quiet)) {
@@ -1046,18 +1197,19 @@ function MENU_INC_SPA_A_ENG {
                 Start-Sleep -Seconds 5
             }
             # Hay conexión
-            Write-Host $Descargando "(~75 KB)" -Fore Yellow
+            #Write-Host $Descargando "(~75 KB)" -Fore Yellow
+            TAMANIO_DESCARGA -Url $SourceDescarga
             $null = New-Item -Path $DestinoDescarga -ItemType Directory -Force
             Invoke-WebRequest -Uri $SourceDescarga -OutFile "$DestinoDescarga\$LocaleEnUs.zip"
-            Copy-Item -Path "$DestinoDescarga\$LocaleEnUs.zip" -Destination "$RutaInstalDefault2\$LocaleEnUs.zip" -Force
+            Copy-Item -Path "$DestinoDescarga\$LocaleEnUs.zip" -Destination "$RutaInstalacion\$LocaleEnUs.zip" -Force
         }
 
         Write-Host $Cambiando -Fore Yellow
 
         $Shell = New-Object -com Shell.Application
-        $Shell.Namespace("$RutaInstalDefault2").copyhere($Shell.NameSpace("$RutaInstalDefault2\$LocaleEnUs.zip").Items(), 0x14)
+        $Shell.Namespace("$RutaInstalacion").copyhere($Shell.NameSpace("$RutaInstalacion\$LocaleEnUs.zip").Items(), 0x14)
 
-        Remove-Item "$RutaInstalDefault2\$LocaleEnUs.zip" -Force -ErrorAction SilentlyContinue
+        Remove-Item "$RutaInstalacion\$LocaleEnUs.zip" -Force -ErrorAction SilentlyContinue
         Write-Host $CambioSpaEng -Fore DarkGreen
         Start-Sleep -Seconds 1
 
@@ -1077,14 +1229,15 @@ function MENU_INC_SPA_A_ENG {
 
 # Cierra app
 function MENU_SALIR {
-    Write-Host "`n Gracias por usar Simi.`n ¡No olvides dejarnos una reseña en www.leandroperez.art!`n" -Fore Yellow
+    Write-Host $SimiDesc -Fore DarkGray
+    Write-Host "`n`n Gracias por usar Simi.`n ¡No olvides dejarnos una reseña en www.leandroperez.art!`n" -Fore Yellow
     Start-Sleep -Seconds 5
     Stop-Process -Id $PID
 }
 
 # Ayuda
 function MENU_AYUDA {
-    Write-Host "`n Gracias por usar Simi.`n En breve se abrirá la página de ayuda.`n" -Fore Yellow
+    Write-Host "`n Gracias por usar Simi.`n En breve se abrirá la página de ayuda." -Fore Yellow
     Start-Sleep -Seconds 2
     Start-Process "https://leandroperez.art/tienda/productos-gratuitos/simi-cambia-idioma-adobe-sin-reinstalar/"
     # Vuelve al menú
