@@ -260,8 +260,8 @@ Por algún motivo al usar `pyinstaller` con argumentos directamente desde la con
 
 ## Acerca de Simi
 
-[![Ver video en YouTube](https://img.youtube.com/vi/jVJ8n9s3CZQ/maxresdefault.jpg)](https://youtu.be/jVJ8n9s3CZQ)
-[Ver video en YouTube](https://youtu.be/jVJ8n9s3CZQ)
+[![Mirá el video en YouTube](https://img.youtube.com/vi/jVJ8n9s3CZQ/maxresdefault.jpg)](https://youtu.be/jVJ8n9s3CZQ)
+[Mirá el video en YouTube](https://youtu.be/jVJ8n9s3CZQ)
 
 ### Licencia
 Este proyecto está bajo la Licencia GPLv2. Ver `LICENSE` para más detalles.

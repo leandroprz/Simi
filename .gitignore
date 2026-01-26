@@ -1,8 +1,5 @@
 # Simi - .gitignore
 
-# GitHub
-.gitignore
-
 # IDEs
 .vscode/
 *.code-workspace
