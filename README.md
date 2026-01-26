@@ -1,11 +1,13 @@
 # Simi - Cambiá el idioma de Adobe sin reinstalar los programas
 
-<a href=".github\simi-win-1.jpg" target="_blank"><img src=".github\simi-win-1.jpg" width="45%"></img></a> <a href=".github\simi-mac-1.png" target="_blank"><img src=".github\simi-mac-1.png" width="45%"></img></a>
+<p align="center">
+    <a href=".github\simi-win-1.jpg" target="_blank"><img src=".github\simi-win-1.jpg" width="45%"></img></a> <a href=".github\simi-mac-1.png" target="_blank"><img src=".github\simi-mac-1.png" width="45%"></img></a>
+</p>
 
 [![Última versión](https://img.shields.io/github/v/release/leandroprz/Simi?color=998f68&label=Última%20Versión&style=for-the-badge)](https://github.com/leandroprz/Simi/releases/latest) ![Plataforma](https://img.shields.io/badge/Plataforma-Windows%20&amp;%20macOS-787878?style=for-the-badge) ![Python](https://img.shields.io/badge/Python-v3.8+-687d99?style=for-the-badge) ![Licencia](https://img.shields.io/badge/Licencia-GPL%20v2-628a6f?style=for-the-badge)
 
 ## ¿Qué es Simi?
-Esta herramienta nace a partir de la necesidad de cambiar rápidamente los idiomas de los diferentes programas de Adobe sin tener que reinstalarlos. Hace un tiempo hice un tutorial donde expliqué cómo cambiar los idiomas editando unos archivos de texto, pero era un poco engorroso y sobre todo molesto si son como yo, que necesitan cambiar constantemente el idioma de inglés a español o viceversa.
+Esta herramienta nace a partir de la necesidad de cambiar rápidamente los idiomas de los diferentes programas de Adobe sin tener que reinstalarlos. Hace un tiempo hice [un tutorial donde expliqué](https://leandroperez.art/blog/cambia-el-idioma-de-los-programas-de-adobe-sin-reinstalarlos/) cómo cambiar los idiomas editando unos archivos de texto, pero era un poco engorroso y sobre todo molesto si son como yo, que necesitan cambiar constantemente el idioma de inglés a español o viceversa.
 
 ---
 
@@ -16,13 +18,13 @@ Esta herramienta nace a partir de la necesidad de cambiar rápidamente los idiom
 
 ### Versión sin compilar (Windows)
 1. Descargá y descomprimí el código
-2. Hacé doble click en Simi.bat
+2. Hacé doble click en `Simi.bat`
    - Se instalarán las dependencias automáticamente (solo la primera vez)
    - Luego se abrirá Simi
 
 ### Versión sin compilar (macOS)
 1. Descargá y descomprimí el código
-2. Hacé doble click en Simi.command (click derecho → Abrir si es necesario)
+2. Hacé doble click en `Simi.command` (click derecho → Abrir si es necesario)
    - Se instalarán las dependencias automáticamente (solo la primera vez)
    - Luego se abrirá Simi
 
@@ -40,7 +42,6 @@ Esta herramienta nace a partir de la necesidad de cambiar rápidamente los idiom
 - Drag & drop de carpetas
 - Backup automático de paquetes de idioma
 - Soporte para español e inglés
-- Detección automática del idioma del sistema operativo
 
 ### Programas soportados
 - After Effects
@@ -89,7 +90,7 @@ simi/
 ## Para desarrolladores
 
 ### Requisitos
-- Python 3.8 o superior
+- Python 3.8+
 - pip
 - ~50MB de espacio para las dependencias
 
@@ -161,6 +162,7 @@ a = Analysis(
     noarchive=False,
     optimize=2,
 )
+
 pyz = PYZ(a.pure, a.zipped_data, cipher=None)
 
 exe = EXE(
@@ -192,6 +194,7 @@ exe = EXE(
 <summary>simi.spec macOS</summary>
 <pre>
 # -*- mode: python ; coding: utf-8 -*-
+
 a = Analysis(
     ['src/simi.py'],
     pathex=[],
@@ -210,7 +213,9 @@ a = Analysis(
     noarchive=False,
     optimize=2,
 )
+
 pyz = PYZ(a.pure, a.zipped_data, cipher=None)
+
 exe = EXE(
     pyz,
     a.scripts,
@@ -232,6 +237,7 @@ exe = EXE(
     entitlements_file=None,
     icon='assets/icono_mac.icns',
 )
+
 app = BUNDLE(
     exe,
     name='Simi.app',
@@ -246,6 +252,8 @@ app = BUNDLE(
 
 Por algún motivo al usar `pyinstaller` con argumentos directamente desde la consola, la app no se compila correctamente y no tengo idea a qué se debe. Por ahí yo soy el inútil, o tal vez PyInstaller es el mañoso :P
 
+Al compilar en macOS, a veces la app aparece en el Dock, luego desaparece, pero finalmente vuelve a aparecer y se ve la ventana de Simi.
+
 [Más info sobre cómo usar PyInstaller aquí](https://pyinstaller.org/en/stable/usage.html).
 
 ---
@@ -255,6 +263,15 @@ Por algún motivo al usar `pyinstaller` con argumentos directamente desde la con
 - Las versiones CC 2018 y CC 2019 no funcionan correctamente. En estos casos se debe agregar manualmente la ruta donde se instaló el programa de Adobe (incluso si se instaló en la ruta por defecto que usa Adobe ya que Simi no detecta correctamente esas versiones)
 - Drag and drop no funciona en Windows
 - Traducir interfaz al inglés
+- Seguro me olvido de algo
+
+---
+
+## Disclaimer
+
+Los paquetes de idioma que se usan en este programa pertenecen a Adobe y sus respectivos propietarios.
+
+Este software solo facilita su gestión y se proporcionan únicamente con fines educativos.
 
 ---
 
