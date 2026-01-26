@@ -1,0 +1,52 @@
+# Simi - .gitignore
+
+# GitHub
+.gitignore
+
+# IDEs
+.vscode/
+*.code-workspace
+
+# Python
+src/__pycache__/
+__pycache__/
+*.pyc
+*.pyo
+
+# PyInstaller
+build/
+dist/
+*.manifest
+*.spec
+*.rc
+*.plist
+
+# Logs
+*.log
+
+# Ejecutables y compilados
+release/
+*.exe
+*.app
+*.dmg
+
+# Idiomas Adobe
+locales/
+
+# Archivos temporales
+*.tmp
+*.bak
+.cache/
+
+# macOS
+.DS_Store
+__MACOSX
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Simi
+build.py
