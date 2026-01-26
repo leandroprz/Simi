@@ -1,3 +1,2 @@
-v2.4
-- Solucionado un problema que permitía borrar parte de la interfaz
-- Nueva función que permite hacer click en una ruta para abrir la carpeta en el explorador de archivos
+v2.5
+- Nueva función para restaurar el idioma de los programas si fueron modificados con Simi

@@ -23,7 +23,7 @@ def get_resource_path(relative_path):
         base_path = getattr(sys, '_MEIPASS', None)
         if base_path is None:
             raise AttributeError("_MEIPASS not found")
-    
+
     except (AttributeError, Exception):
         # Development mode - use the directory containing this script
         base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -78,6 +78,6 @@ def get_base_path():
         if base_path is None:
             raise AttributeError("_MEIPASS not found")
         return base_path
-    
+
     except (AttributeError, Exception):
         return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

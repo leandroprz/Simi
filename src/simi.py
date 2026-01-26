@@ -43,7 +43,7 @@ PADDING_INT = 3
 PADDING_EXT = 4
 
 # Constantes Simi
-VERSION_ACTUAL_SIMI = "2.4"
+VERSION_ACTUAL_SIMI = "2.5"
 NOMBRE_RELEASE = "Simi_v"
 
 # Constantes idiomas
@@ -78,6 +78,8 @@ TEXTOS = {
     'menu_cambio_espanol': 'Cambiar programas al español',
     'menu_cambio_ingles': 'Cambiar programas al inglés',
     'menu_buscar_version': 'Buscar nueva versión de Simi',
+    'menu_restaurar_xml': 'Restaurar idioma',
+    'menu_usando_bak': 'usando backup de Simi',
     'menu_ayuda': 'Ayuda',
     'menu_reportar_error': 'Reportar un error',
     'menu_salir': 'Salir',
@@ -127,12 +129,17 @@ TEXTOS = {
     'idioma_backup_2': 'Vas a necesitar ese archivo si algo malió sal.',
     'no_cambio': '¡No se pudo cambiar el idioma!',
     'razones': 'Puede ser por diferentes razones:\n• El programa no está instalado en la ruta que ingresaste\n• La versión que elegiste no está instalada en tu computadora\n• Simi no encontró el archivo application.xml en la ruta que ingresaste\n• El programa no se instaló usando la aplicación Adobe Creative Cloud',
+    'no_restauro': '¡No se pudo restaurar el idioma!',
+    'razones_bak': 'Puede ser por diferentes razones:\n• El programa no está instalado en la ruta que ingresaste\n• La versión que elegiste no está instalada en tu computadora\n• Simi no encontró el archivo application.bak en la ruta que ingresaste',
     'cambiar_idioma': 'Cambiar idioma de',
     'al': 'al',
     'cambiar_a': 'Cambiar a',
     'cambiar_programas': 'Cambiar programas al',
-    'cambio_ps': 'Podés elegir el nuevo idioma desde Photoshop ingresando al menú Editar > Preferencias > Interfaz > Idioma de la interfaz. Reiniciá Photoshop para ver los cambios.',
+    'cambio_ps': 'Podés elegir el nuevo idioma desde Photoshop, ingresando al menú Editar > Preferencias > Interfaz > Idioma de la interfaz.\nReiniciá Photoshop para ver los cambios.',
     'error_inesperado': 'Error inesperado:',
+    'restauro_correctamente_1': 'El idioma se restauró correctamente al',
+    'restauro_correctamente_2': 'usando la copia de seguridad en la ruta:',
+    'restaura_ps': 'Podés volver al idioma anterior desde Photoshop, ingresando al menú Editar > Preferencias > Interfaz > Idioma de la interfaz.\nReiniciá Photoshop para ver los cambios.',
     # Connectividad y descarga
     'archivo_existente': 'Se usará el archivo que se descargó previamente en la ruta:',
     'descargando': 'Descargando archivo...',
@@ -164,6 +171,7 @@ TEXTOS = {
     'aviso_importante_2': 'Los paquetes de idioma que se usan en este programa pertenecen a Adobe y sus respectivos propietarios.',
     'aviso_importante_3': 'Este software solo facilita su gestión y se proporcionan únicamente con fines educativos.',
     # Misc
+    'de': 'de',
     'barra_progreso_modo1': 'Modo no soportado:',
     'barra_progreso_modo2': 'Usá descarga, unzip o copia.',
     'error_ruta_descargas': 'No se pudo obtener la ruta de la carpeta Descargas.',
@@ -1968,6 +1976,113 @@ def edita_idioma_xml(ruta_carpeta, nuevo_idioma):
         muestra_input_usuario(f"{TEXTOS['input_menu_anterior']}").strip()
         return False
 
+def restaura_idioma_xml(ruta_carpeta):
+    """
+    Restaura el archivo application.xml desde su backup (.bak)
+    Elimina el archivo XML actual y renombra el .bak a .xml
+
+    Args:
+        ruta_carpeta (str): Ruta de la carpeta donde se encuentra el archivo bak
+
+    Returns:
+        tuple: (bool, str) - (éxito, idioma_legible) donde idioma_legible es el nombre del idioma o (False, None) si hay error
+    """
+    try:
+        # Obtiene ruta donde está el archivo application.xml
+        ruta_archivo_xml = os.path.join(ruta_carpeta)
+
+        # Define rutas
+        ruta_xml = Path(ruta_archivo_xml)
+        ruta_backup_xml = ruta_xml.with_suffix('.bak')
+
+        # Chequea si el archivo .bak existe
+        if not os.path.exists(ruta_backup_xml):
+            muestra_contenido(
+                f"{Fore.LIGHTRED_EX}{TEXTOS['no_restauro']}\n\n"
+                f"{Fore.LIGHTYELLOW_EX}No se encontró la copia de seguridad (application.bak)\n"
+            )
+            borde_inferior()
+            muestra_input_usuario(f"{TEXTOS['input_menu_anterior']}").strip()
+            return False, None
+
+        # Lee el contenido del .bak para extraer el idioma
+        idioma_locale = None
+        idioma_legible = "desconocido"
+
+        try:
+            # Detecta encoding del archivo .bak
+            encoding = detecta_encoding(ruta_backup_xml)
+
+            # Lee el contenido del .bak
+            with open(ruta_backup_xml, 'r', encoding=encoding) as f:
+                contenido_bak = f.read()
+
+            # Busca el tag de idioma
+            match = re.search(TAG_IDIOMAS, contenido_bak)
+
+            if match:
+                idioma_locale = match.group(1).strip()
+
+                # Mapeo de locales a nombres legibles
+                if idioma_locale == 'en_US':
+                    idioma_legible = 'inglés'
+                elif idioma_locale == 'es_ES':
+                    idioma_legible = 'español'
+                else:
+                    idioma_legible = idioma_locale
+
+        except Exception as e:
+            # Si no puede leer el idioma, continúa con la restauración de todas formas
+            idioma_legible = "desconocido"
+
+        sistema = platform.system()
+
+        if sistema == 'Darwin':
+            # En macOS usa comandos del sistema
+            # Primero elimina el XML si existe, luego renombra el BAK
+            operaciones = []
+
+            # Solo intenta eliminar si el archivo XML existe
+            if os.path.exists(ruta_archivo_xml):
+                operaciones.append({
+                    'accion': 'comando',
+                    'comando': f"rm -f '{ruta_archivo_xml}'"
+                })
+
+            # Renombra (mueve) el .bak a .xml
+            operaciones.append({
+                'accion': 'comando',
+                'comando': f"mv '{ruta_backup_xml}' '{ruta_archivo_xml}'"
+            })
+
+        else:
+            # En Windows usa comandos del sistema también para consistencia
+            operaciones = []
+
+            # Solo intenta eliminar si el archivo XML existe
+            if os.path.exists(ruta_archivo_xml):
+                operaciones.append({
+                    'accion': 'comando',
+                    'comando': f'del /F /Q "{ruta_archivo_xml}"'
+                })
+
+            # Renombra el .bak a .xml
+            operaciones.append({
+                'accion': 'comando',
+                'comando': f'move /Y "{ruta_backup_xml}" "{ruta_archivo_xml}"'
+            })
+
+        # Planifica las operaciones para ejecutarlas con permisos administrativos si es necesario
+        planifica_ops_sis_archivos(operaciones)
+
+        return True, idioma_legible
+
+    except Exception as e:
+        muestra_contenido(f"{TEXTOS['no_restauro']}\nError: {e}\n")
+        borde_inferior()
+        muestra_input_usuario(f"{TEXTOS['input_menu_anterior']}").strip()
+        return False, None
+
 def version_update():
     """
     Chequea si hay una nueva versión de Simi leyendo el contenido de un txt que tiene solo el número de versión
@@ -3319,6 +3434,983 @@ def cambio_idioma_character_animator(locale_xml):
     muestra_input_usuario(f"{TEXTOS['input_menu_anterior']}").strip()
     return True
 
+def restaurar_xml_after_effects(version_adobe):
+    """
+    Restaura el idioma de After Effects usando el archivo application.bak, la versión y ruta ingresada por el usuario
+
+    Args:
+	    version_adobe (int): Int que puede ser 2018-2025+
+    """
+
+    global ruta_instal_print, operaciones_pendientes_admin
+    operaciones_pendientes_admin = [] # Inicializa la lista
+
+    NOMBRE_PROGRAMA = "After Effects"
+    titulo_menu = titulo_subrayado(f"{TEXTOS['menu_restaurar_xml']} {TEXTOS['de']} {NOMBRE_PROGRAMA} {version_adobe} {TEXTOS['menu_usando_bak']}")
+
+    limpia_pantalla()
+    borde_superior(f"{TEXTOS['simi_titulo']}", f"v{VERSION_ACTUAL_SIMI}")
+    muestra_contenido(
+        f"\n{TEXTOS['simi_descripcion']}\n\n"
+        f"\n{titulo_menu}"
+    )
+
+    # Pide ruta al usuario
+    ruta_instal_programa_bak = ruta_instal_print = ruta_instalacion_programa(
+        ruta_subcarpeta=f"Adobe {NOMBRE_PROGRAMA} {version_adobe}", # Ruta Windows
+        nombre_programa='after_effects', # Ruta macOS
+        version_adobe=version_adobe # Versión macOS
+    )
+
+    # Ruta del BAK según el sistema operativo
+    RUTA_BAK = {
+        'Windows': Path(ruta_instal_programa_bak) / 'Support Files' / 'AMT' / 'application.bak',
+        'Darwin': Path(ruta_instal_programa_bak) / 'AMT' / 'application.bak'
+    }
+
+    ruta_instal_programa_bak = RUTA_BAK.get(platform.system())
+
+    limpia_pantalla()
+    borde_superior(f"{TEXTOS['simi_titulo']}", f"v{VERSION_ACTUAL_SIMI}")
+    muestra_contenido(
+        f"\n{TEXTOS['simi_descripcion']}\n\n"
+        f"\n{titulo_menu}\n"
+    )
+
+    # Cierra el programa
+    chequea_cierra_app(f"Adobe {NOMBRE_PROGRAMA} {version_adobe}")
+    borde_inferior()
+
+    # Chequea si el archivo BAK existe
+    if not ruta_instal_programa_bak or not ruta_instal_programa_bak.exists():
+        limpia_pantalla()
+
+        borde_superior(f"{TEXTOS['simi_titulo']}", f"v{VERSION_ACTUAL_SIMI}")
+        muestra_contenido(
+            f"\n{TEXTOS['simi_descripcion']}\n\n"
+            f"\n{titulo_menu}\n\n"
+            f"{Fore.LIGHTRED_EX}{TEXTOS['no_restauro']}\n\n"
+            f"{Fore.LIGHTYELLOW_EX}{TEXTOS['razones_bak']}\n"
+        )
+        borde_inferior()
+
+        muestra_input_usuario(f"{TEXTOS['input_menu_anterior']}").strip()
+        return False
+
+    limpia_pantalla()
+
+    borde_superior(f"{TEXTOS['simi_titulo']}", f"v{VERSION_ACTUAL_SIMI}")
+    muestra_contenido(
+        f"\n{TEXTOS['simi_descripcion']}\n\n"
+        f"\n{titulo_menu}\n"
+    )
+
+    # Planifica restaurar el BAK a XML
+    ruta_xml = ruta_instal_programa_bak.with_suffix('.xml')
+    bak_exitoso, idioma_restaurado = restaura_idioma_xml(ruta_xml)
+    if not bak_exitoso:
+        return False
+
+    # Ejecuta todas las operaciones pendientes de un solo saque
+    if operaciones_pendientes_admin:
+        #muestra_contenido(f"{Fore.LIGHTCYAN_EX}Aplicando cambios con permisos administrativos...\n")
+
+        success, results, error = ejecutar_operaciones_pendientes(
+            titulo=f"Restaurar idioma de {NOMBRE_PROGRAMA} {version_adobe}",
+            mensaje=f"Se requieren permisos de administrador para restaurar el idioma de {NOMBRE_PROGRAMA} {version_adobe}.",
+            muestra_mensaje_func=muestra_contenido
+        )
+
+        if not success:
+            muestra_contenido(f"{Fore.LIGHTRED_EX}{TEXTOS['no_cambio']}\nError: {error}\n")
+            borde_inferior()
+
+            muestra_input_usuario(f"{TEXTOS['input_menu_anterior']}").strip()
+            return False
+
+        muestra_contenido(
+            f"{Fore.LIGHTGREEN_EX}{TEXTOS['restauro_correctamente_1']} {idioma_restaurado} {TEXTOS['restauro_correctamente_2']} [{ruta_instal_programa_bak}]\n"
+        )
+    else: # No necesita permisos de admin
+        muestra_contenido(
+            f"{Fore.LIGHTGREEN_EX}{TEXTOS['restauro_correctamente_1']} {idioma_restaurado} {TEXTOS['restauro_correctamente_2']} [{ruta_instal_programa_bak}]\n"
+        )
+    borde_inferior()
+
+    muestra_input_usuario(f"{TEXTOS['input_menu_anterior']}").strip()
+    return True
+
+def restaurar_xml_premiere_pro(version_adobe):
+    """
+    Restaura el idioma de Premiere Pro usando el archivo application.bak, la versión y ruta ingresada por el usuario
+
+    Args:
+	    version_adobe (int): Int que puede ser 2018-2025+
+    """
+
+    global ruta_instal_print, operaciones_pendientes_admin
+    operaciones_pendientes_admin = [] # Inicializa la lista
+
+    NOMBRE_PROGRAMA = "Premiere Pro"
+    titulo_menu = titulo_subrayado(f"{TEXTOS['menu_restaurar_xml']} {TEXTOS['de']} {NOMBRE_PROGRAMA} {version_adobe} {TEXTOS['menu_usando_bak']}")
+
+    limpia_pantalla()
+    borde_superior(f"{TEXTOS['simi_titulo']}", f"v{VERSION_ACTUAL_SIMI}")
+    muestra_contenido(
+        f"\n{TEXTOS['simi_descripcion']}\n\n"
+        f"\n{titulo_menu}"
+    )
+
+    # Pide ruta al usuario
+    ruta_instal_programa_bak = ruta_instal_print = ruta_instalacion_programa(
+        ruta_subcarpeta=f"Adobe {NOMBRE_PROGRAMA} {version_adobe}", # Ruta Windows
+        nombre_programa='premiere_pro', # Ruta macOS
+        version_adobe=version_adobe # Versión macOS
+    )
+
+    # Ruta del BAK según el sistema operativo
+    RUTA_BAK = {
+        'Windows': Path(ruta_instal_programa_bak) / 'AMT' / 'application.bak',
+        'Darwin': Path(ruta_instal_programa_bak) / 'AMT' / 'application.bak'
+    }
+
+    ruta_instal_programa_bak = RUTA_BAK.get(platform.system())
+
+    limpia_pantalla()
+    borde_superior(f"{TEXTOS['simi_titulo']}", f"v{VERSION_ACTUAL_SIMI}")
+    muestra_contenido(
+        f"\n{TEXTOS['simi_descripcion']}\n\n"
+        f"\n{titulo_menu}\n"
+    )
+
+    # Cierra el programa
+    chequea_cierra_app(f"Adobe {NOMBRE_PROGRAMA} {version_adobe}")
+    borde_inferior()
+
+    # Chequea si el archivo BAK existe
+    if not ruta_instal_programa_bak or not ruta_instal_programa_bak.exists():
+        limpia_pantalla()
+
+        borde_superior(f"{TEXTOS['simi_titulo']}", f"v{VERSION_ACTUAL_SIMI}")
+        muestra_contenido(
+            f"\n{TEXTOS['simi_descripcion']}\n\n"
+            f"\n{titulo_menu}\n\n"
+            f"{Fore.LIGHTRED_EX}{TEXTOS['no_restauro']}\n\n"
+            f"{Fore.LIGHTYELLOW_EX}{TEXTOS['razones_bak']}\n"
+        )
+        borde_inferior()
+
+        muestra_input_usuario(f"{TEXTOS['input_menu_anterior']}").strip()
+        return False
+
+    limpia_pantalla()
+
+    borde_superior(f"{TEXTOS['simi_titulo']}", f"v{VERSION_ACTUAL_SIMI}")
+    muestra_contenido(
+        f"\n{TEXTOS['simi_descripcion']}\n\n"
+        f"\n{titulo_menu}\n"
+    )
+
+    # Planifica restaurar el BAK a XML
+    ruta_xml = ruta_instal_programa_bak.with_suffix('.xml')
+    bak_exitoso, idioma_restaurado = restaura_idioma_xml(ruta_xml)
+    if not bak_exitoso:
+        return False
+
+    # Ejecuta todas las operaciones pendientes de un solo saque
+    if operaciones_pendientes_admin:
+        #muestra_contenido(f"{Fore.LIGHTCYAN_EX}Aplicando cambios con permisos administrativos...\n")
+
+        success, results, error = ejecutar_operaciones_pendientes(
+            titulo=f"Restaurar idioma de {NOMBRE_PROGRAMA} {version_adobe}",
+            mensaje=f"Se requieren permisos de administrador para restaurar el idioma de {NOMBRE_PROGRAMA} {version_adobe}.",
+            muestra_mensaje_func=muestra_contenido
+        )
+
+        if not success:
+            muestra_contenido(f"{Fore.LIGHTRED_EX}{TEXTOS['no_cambio']}\nError: {error}\n")
+            borde_inferior()
+
+            muestra_input_usuario(f"{TEXTOS['input_menu_anterior']}").strip()
+            return False
+
+        muestra_contenido(
+            f"{Fore.LIGHTGREEN_EX}{TEXTOS['restauro_correctamente_1']} {idioma_restaurado} {TEXTOS['restauro_correctamente_2']} [{ruta_instal_programa_bak}]\n"
+        )
+    else: # No necesita permisos de admin
+        muestra_contenido(
+            f"{Fore.LIGHTGREEN_EX}{TEXTOS['restauro_correctamente_1']} {idioma_restaurado} {TEXTOS['restauro_correctamente_2']} [{ruta_instal_programa_bak}]\n"
+        )
+    borde_inferior()
+
+    muestra_input_usuario(f"{TEXTOS['input_menu_anterior']}").strip()
+    return True
+
+def restaurar_xml_audition(version_adobe):
+    """
+    Restaura el idioma de Audition usando el archivo application.bak, la versión y ruta ingresada por el usuario
+
+    Args:
+	    version_adobe (int): Int que puede ser 2018-2025+
+    """
+
+    global ruta_instal_print, operaciones_pendientes_admin
+    operaciones_pendientes_admin = [] # Inicializa la lista
+
+    NOMBRE_PROGRAMA = "Audition"
+    titulo_menu = titulo_subrayado(f"{TEXTOS['menu_restaurar_xml']} {TEXTOS['de']} {NOMBRE_PROGRAMA} {version_adobe} {TEXTOS['menu_usando_bak']}")
+
+    limpia_pantalla()
+    borde_superior(f"{TEXTOS['simi_titulo']}", f"v{VERSION_ACTUAL_SIMI}")
+    muestra_contenido(
+        f"\n{TEXTOS['simi_descripcion']}\n\n"
+        f"\n{titulo_menu}"
+    )
+
+    # Pide ruta al usuario
+    ruta_instal_programa_bak = ruta_instal_print = ruta_instalacion_programa(
+        ruta_subcarpeta=f"Adobe {NOMBRE_PROGRAMA} {version_adobe}", # Ruta Windows
+        nombre_programa='audition', # Ruta macOS
+        version_adobe=version_adobe # Versión macOS
+    )
+
+    # Ruta del BAK según el sistema operativo
+    RUTA_BAK = {
+        'Windows': Path(ruta_instal_programa_bak) / 'AMT' / 'application.bak',
+        'Darwin': Path(ruta_instal_programa_bak) / 'AMT' / 'application.bak'
+    }
+
+    ruta_instal_programa_bak = RUTA_BAK.get(platform.system())
+
+    limpia_pantalla()
+    borde_superior(f"{TEXTOS['simi_titulo']}", f"v{VERSION_ACTUAL_SIMI}")
+    muestra_contenido(
+        f"\n{TEXTOS['simi_descripcion']}\n\n"
+        f"\n{titulo_menu}\n"
+    )
+
+    # Cierra el programa
+    chequea_cierra_app(f"Adobe {NOMBRE_PROGRAMA} {version_adobe}")
+    borde_inferior()
+
+    # Chequea si el archivo BAK existe
+    if not ruta_instal_programa_bak or not ruta_instal_programa_bak.exists():
+        limpia_pantalla()
+
+        borde_superior(f"{TEXTOS['simi_titulo']}", f"v{VERSION_ACTUAL_SIMI}")
+        muestra_contenido(
+            f"\n{TEXTOS['simi_descripcion']}\n\n"
+            f"\n{titulo_menu}\n\n"
+            f"{Fore.LIGHTRED_EX}{TEXTOS['no_restauro']}\n\n"
+            f"{Fore.LIGHTYELLOW_EX}{TEXTOS['razones_bak']}\n"
+        )
+        borde_inferior()
+
+        muestra_input_usuario(f"{TEXTOS['input_menu_anterior']}").strip()
+        return False
+
+    limpia_pantalla()
+
+    borde_superior(f"{TEXTOS['simi_titulo']}", f"v{VERSION_ACTUAL_SIMI}")
+    muestra_contenido(
+        f"\n{TEXTOS['simi_descripcion']}\n\n"
+        f"\n{titulo_menu}\n"
+    )
+
+    # Planifica restaurar el BAK a XML
+    ruta_xml = ruta_instal_programa_bak.with_suffix('.xml')
+    bak_exitoso, idioma_restaurado = restaura_idioma_xml(ruta_xml)
+    if not bak_exitoso:
+        return False
+
+    # Ejecuta todas las operaciones pendientes de un solo saque
+    if operaciones_pendientes_admin:
+        #muestra_contenido(f"{Fore.LIGHTCYAN_EX}Aplicando cambios con permisos administrativos...\n")
+
+        success, results, error = ejecutar_operaciones_pendientes(
+            titulo=f"Restaurar idioma de {NOMBRE_PROGRAMA} {version_adobe}",
+            mensaje=f"Se requieren permisos de administrador para restaurar el idioma de {NOMBRE_PROGRAMA} {version_adobe}.",
+            muestra_mensaje_func=muestra_contenido
+        )
+
+        if not success:
+            muestra_contenido(f"{Fore.LIGHTRED_EX}{TEXTOS['no_cambio']}\nError: {error}\n")
+            borde_inferior()
+
+            muestra_input_usuario(f"{TEXTOS['input_menu_anterior']}").strip()
+            return False
+
+        muestra_contenido(
+            f"{Fore.LIGHTGREEN_EX}{TEXTOS['restauro_correctamente_1']} {idioma_restaurado} {TEXTOS['restauro_correctamente_2']} [{ruta_instal_programa_bak}]\n"
+        )
+    else: # No necesita permisos de admin
+        muestra_contenido(
+            f"{Fore.LIGHTGREEN_EX}{TEXTOS['restauro_correctamente_1']} {idioma_restaurado} {TEXTOS['restauro_correctamente_2']} [{ruta_instal_programa_bak}]\n"
+        )
+    borde_inferior()
+
+    muestra_input_usuario(f"{TEXTOS['input_menu_anterior']}").strip()
+    return True
+
+def restaurar_xml_indesign(version_adobe):
+    """
+    Restaura el idioma de InDesign usando el archivo application.bak, la versión y ruta ingresada por el usuario
+
+    Args:
+	    version_adobe (int): Int que puede ser 2018-2025+
+    """
+
+    global ruta_instal_print, operaciones_pendientes_admin
+    operaciones_pendientes_admin = [] # Inicializa la lista
+
+    NOMBRE_PROGRAMA = "InDesign"
+    titulo_menu = titulo_subrayado(f"{TEXTOS['menu_restaurar_xml']} {TEXTOS['de']} {NOMBRE_PROGRAMA} {version_adobe} {TEXTOS['menu_usando_bak']}")
+
+    limpia_pantalla()
+    borde_superior(f"{TEXTOS['simi_titulo']}", f"v{VERSION_ACTUAL_SIMI}")
+    muestra_contenido(
+        f"\n{TEXTOS['simi_descripcion']}\n\n"
+        f"\n{titulo_menu}"
+    )
+
+    # Pide ruta al usuario
+    ruta_instal_programa_bak = ruta_instal_print = ruta_instalacion_programa(
+        ruta_subcarpeta=f"Adobe {NOMBRE_PROGRAMA} {version_adobe}", # Ruta Windows
+        nombre_programa='indesign', # Ruta macOS
+        version_adobe=version_adobe # Versión macOS
+    )
+
+    # Ruta del BAK según el sistema operativo
+    RUTA_BAK = {
+        'Windows': Path(ruta_instal_programa_bak) / 'AMT' / 'application.bak',
+        'Darwin': Path(ruta_instal_programa_bak) / 'Resources' / 'AMT' / 'ID' / 'AMT' / 'application.bak'
+    }
+
+    ruta_instal_programa_bak = RUTA_BAK.get(platform.system())
+
+    limpia_pantalla()
+    borde_superior(f"{TEXTOS['simi_titulo']}", f"v{VERSION_ACTUAL_SIMI}")
+    muestra_contenido(
+        f"\n{TEXTOS['simi_descripcion']}\n\n"
+        f"\n{titulo_menu}\n"
+    )
+
+    # Cierra el programa
+    chequea_cierra_app(f"Adobe {NOMBRE_PROGRAMA} {version_adobe}")
+    borde_inferior()
+
+    # Chequea si el archivo BAK existe
+    if not ruta_instal_programa_bak or not ruta_instal_programa_bak.exists():
+        limpia_pantalla()
+
+        borde_superior(f"{TEXTOS['simi_titulo']}", f"v{VERSION_ACTUAL_SIMI}")
+        muestra_contenido(
+            f"\n{TEXTOS['simi_descripcion']}\n\n"
+            f"\n{titulo_menu}\n\n"
+            f"{Fore.LIGHTRED_EX}{TEXTOS['no_restauro']}\n\n"
+            f"{Fore.LIGHTYELLOW_EX}{TEXTOS['razones_bak']}\n"
+        )
+        borde_inferior()
+
+        muestra_input_usuario(f"{TEXTOS['input_menu_anterior']}").strip()
+        return False
+
+    limpia_pantalla()
+
+    borde_superior(f"{TEXTOS['simi_titulo']}", f"v{VERSION_ACTUAL_SIMI}")
+    muestra_contenido(
+        f"\n{TEXTOS['simi_descripcion']}\n\n"
+        f"\n{titulo_menu}\n"
+    )
+
+    # Planifica restaurar el BAK a XML
+    ruta_xml = ruta_instal_programa_bak.with_suffix('.xml')
+    bak_exitoso, idioma_restaurado = restaura_idioma_xml(ruta_xml)
+    if not bak_exitoso:
+        return False
+
+    # Ejecuta todas las operaciones pendientes de un solo saque
+    if operaciones_pendientes_admin:
+        #muestra_contenido(f"{Fore.LIGHTCYAN_EX}Aplicando cambios con permisos administrativos...\n")
+
+        success, results, error = ejecutar_operaciones_pendientes(
+            titulo=f"Restaurar idioma de {NOMBRE_PROGRAMA} {version_adobe}",
+            mensaje=f"Se requieren permisos de administrador para restaurar el idioma de {NOMBRE_PROGRAMA} {version_adobe}.",
+            muestra_mensaje_func=muestra_contenido
+        )
+
+        if not success:
+            muestra_contenido(f"{Fore.LIGHTRED_EX}{TEXTOS['no_cambio']}\nError: {error}\n")
+            borde_inferior()
+
+            muestra_input_usuario(f"{TEXTOS['input_menu_anterior']}").strip()
+            return False
+
+        muestra_contenido(
+            f"{Fore.LIGHTGREEN_EX}{TEXTOS['restauro_correctamente_1']} {idioma_restaurado} {TEXTOS['restauro_correctamente_2']} [{ruta_instal_programa_bak}]\n"
+        )
+    else: # No necesita permisos de admin
+        muestra_contenido(
+            f"{Fore.LIGHTGREEN_EX}{TEXTOS['restauro_correctamente_1']} {idioma_restaurado} {TEXTOS['restauro_correctamente_2']} [{ruta_instal_programa_bak}]\n"
+        )
+    borde_inferior()
+
+    muestra_input_usuario(f"{TEXTOS['input_menu_anterior']}").strip()
+    return True
+
+def restaurar_xml_media_encoder(version_adobe):
+    """
+    Restaura el idioma de Media Encoder usando el archivo application.bak, la versión y ruta ingresada por el usuario
+
+    Args:
+	    version_adobe (int): Int que puede ser 2018-2025+
+    """
+
+    global ruta_instal_print, operaciones_pendientes_admin
+    operaciones_pendientes_admin = [] # Inicializa la lista
+
+    NOMBRE_PROGRAMA = "Media Encoder"
+    titulo_menu = titulo_subrayado(f"{TEXTOS['menu_restaurar_xml']} {TEXTOS['de']} {NOMBRE_PROGRAMA} {version_adobe} {TEXTOS['menu_usando_bak']}")
+
+    limpia_pantalla()
+    borde_superior(f"{TEXTOS['simi_titulo']}", f"v{VERSION_ACTUAL_SIMI}")
+    muestra_contenido(
+        f"\n{TEXTOS['simi_descripcion']}\n\n"
+        f"\n{titulo_menu}"
+    )
+
+    # Pide ruta al usuario
+    ruta_instal_programa_bak = ruta_instal_print = ruta_instalacion_programa(
+        ruta_subcarpeta=f"Adobe {NOMBRE_PROGRAMA} {version_adobe}", # Ruta Windows
+        nombre_programa='media_encoder', # Ruta macOS
+        version_adobe=version_adobe # Versión macOS
+    )
+
+    # Ruta del BAK según el sistema operativo
+    RUTA_BAK = {
+        'Windows': Path(ruta_instal_programa_bak) / 'AMT' / 'application.bak',
+        'Darwin': Path(ruta_instal_programa_bak) / 'AMT' / 'application.bak'
+    }
+
+    ruta_instal_programa_bak = RUTA_BAK.get(platform.system())
+
+    limpia_pantalla()
+    borde_superior(f"{TEXTOS['simi_titulo']}", f"v{VERSION_ACTUAL_SIMI}")
+    muestra_contenido(
+        f"\n{TEXTOS['simi_descripcion']}\n\n"
+        f"\n{titulo_menu}\n"
+    )
+
+    # Cierra el programa
+    chequea_cierra_app(f"Adobe {NOMBRE_PROGRAMA} {version_adobe}")
+    borde_inferior()
+
+    # Chequea si el archivo BAK existe
+    if not ruta_instal_programa_bak or not ruta_instal_programa_bak.exists():
+        limpia_pantalla()
+
+        borde_superior(f"{TEXTOS['simi_titulo']}", f"v{VERSION_ACTUAL_SIMI}")
+        muestra_contenido(
+            f"\n{TEXTOS['simi_descripcion']}\n\n"
+            f"\n{titulo_menu}\n\n"
+            f"{Fore.LIGHTRED_EX}{TEXTOS['no_restauro']}\n\n"
+            f"{Fore.LIGHTYELLOW_EX}{TEXTOS['razones_bak']}\n"
+        )
+        borde_inferior()
+
+        muestra_input_usuario(f"{TEXTOS['input_menu_anterior']}").strip()
+        return False
+
+    limpia_pantalla()
+
+    borde_superior(f"{TEXTOS['simi_titulo']}", f"v{VERSION_ACTUAL_SIMI}")
+    muestra_contenido(
+        f"\n{TEXTOS['simi_descripcion']}\n\n"
+        f"\n{titulo_menu}\n"
+    )
+
+    # Planifica restaurar el BAK a XML
+    ruta_xml = ruta_instal_programa_bak.with_suffix('.xml')
+    bak_exitoso, idioma_restaurado = restaura_idioma_xml(ruta_xml)
+    if not bak_exitoso:
+        return False
+
+    # Ejecuta todas las operaciones pendientes de un solo saque
+    if operaciones_pendientes_admin:
+        #muestra_contenido(f"{Fore.LIGHTCYAN_EX}Aplicando cambios con permisos administrativos...\n")
+
+        success, results, error = ejecutar_operaciones_pendientes(
+            titulo=f"Restaurar idioma de {NOMBRE_PROGRAMA} {version_adobe}",
+            mensaje=f"Se requieren permisos de administrador para restaurar el idioma de {NOMBRE_PROGRAMA} {version_adobe}.",
+            muestra_mensaje_func=muestra_contenido
+        )
+
+        if not success:
+            muestra_contenido(f"{Fore.LIGHTRED_EX}{TEXTOS['no_cambio']}\nError: {error}\n")
+            borde_inferior()
+
+            muestra_input_usuario(f"{TEXTOS['input_menu_anterior']}").strip()
+            return False
+
+        muestra_contenido(
+            f"{Fore.LIGHTGREEN_EX}{TEXTOS['restauro_correctamente_1']} {idioma_restaurado} {TEXTOS['restauro_correctamente_2']} [{ruta_instal_programa_bak}]\n"
+        )
+    else: # No necesita permisos de admin
+        muestra_contenido(
+            f"{Fore.LIGHTGREEN_EX}{TEXTOS['restauro_correctamente_1']} {idioma_restaurado} {TEXTOS['restauro_correctamente_2']} [{ruta_instal_programa_bak}]\n"
+        )
+    borde_inferior()
+
+    muestra_input_usuario(f"{TEXTOS['input_menu_anterior']}").strip()
+    return True
+
+def restaurar_xml_photoshop(version_adobe):
+    """
+    Muestra un mensaje indicándole al usuario cómo debe cambiar el idioma de Photoshop desde la interfaz del programa
+    """
+    NOMBRE_PROGRAMA = "Photoshop"
+
+    titulo_menu = titulo_subrayado(f"{TEXTOS['menu_restaurar_xml']} {TEXTOS['de']} {NOMBRE_PROGRAMA} {version_adobe} {TEXTOS['menu_usando_bak']}")
+
+    while True:
+        limpia_pantalla()
+
+        borde_superior(f"{TEXTOS['simi_titulo']}", f"v{VERSION_ACTUAL_SIMI}")
+        muestra_contenido(
+            f"\n{TEXTOS['simi_descripcion']}\n\n"
+            f"\n{titulo_menu}\n\n"
+            f"{Fore.LIGHTCYAN_EX}{TEXTOS['restaura_ps']}\n"
+        )
+        borde_inferior()
+
+        muestra_input_usuario(f"{TEXTOS['input_menu_anterior']}").strip()
+
+        return True
+
+def restaurar_xml_animate(version_adobe):
+    """
+    Restaura el idioma de Animate usando el archivo application.bak, la versión y ruta ingresada por el usuario
+
+    Args:
+	    version_adobe (int): Int que puede ser 2018-2025+
+    """
+
+    global ruta_instal_print, operaciones_pendientes_admin
+    operaciones_pendientes_admin = [] # Inicializa la lista
+
+    NOMBRE_PROGRAMA = "Animate"
+    titulo_menu = titulo_subrayado(f"{TEXTOS['menu_restaurar_xml']} {TEXTOS['de']} {NOMBRE_PROGRAMA} {version_adobe} {TEXTOS['menu_usando_bak']}")
+
+    limpia_pantalla()
+    borde_superior(f"{TEXTOS['simi_titulo']}", f"v{VERSION_ACTUAL_SIMI}")
+    muestra_contenido(
+        f"\n{TEXTOS['simi_descripcion']}\n\n"
+        f"\n{titulo_menu}"
+    )
+
+    # Pide ruta al usuario
+    ruta_instal_programa_bak = ruta_instal_print = ruta_instalacion_programa(
+        ruta_subcarpeta=f"Adobe {NOMBRE_PROGRAMA} {version_adobe}", # Ruta Windows
+        nombre_programa='animate', # Ruta macOS
+        version_adobe=version_adobe # Versión macOS
+    )
+
+    # Ruta del BAK según el sistema operativo
+    RUTA_BAK = {
+        'Windows': Path(ruta_instal_programa_bak) / 'AMT' / 'application.bak',
+        'Darwin': Path(ruta_instal_programa_bak) / 'App' / 'Contents' / 'Resources' / 'AMT' / 'application.bak'
+    }
+
+    ruta_instal_programa_bak = RUTA_BAK.get(platform.system())
+
+    limpia_pantalla()
+    borde_superior(f"{TEXTOS['simi_titulo']}", f"v{VERSION_ACTUAL_SIMI}")
+    muestra_contenido(
+        f"\n{TEXTOS['simi_descripcion']}\n\n"
+        f"\n{titulo_menu}\n"
+    )
+
+    # Cierra el programa
+    chequea_cierra_app(f"Adobe {NOMBRE_PROGRAMA} {version_adobe}")
+    borde_inferior()
+
+    # Chequea si el archivo BAK existe
+    if not ruta_instal_programa_bak or not ruta_instal_programa_bak.exists():
+        limpia_pantalla()
+
+        borde_superior(f"{TEXTOS['simi_titulo']}", f"v{VERSION_ACTUAL_SIMI}")
+        muestra_contenido(
+            f"\n{TEXTOS['simi_descripcion']}\n\n"
+            f"\n{titulo_menu}\n\n"
+            f"{Fore.LIGHTRED_EX}{TEXTOS['no_restauro']}\n\n"
+            f"{Fore.LIGHTYELLOW_EX}{TEXTOS['razones_bak']}\n"
+        )
+        borde_inferior()
+
+        muestra_input_usuario(f"{TEXTOS['input_menu_anterior']}").strip()
+        return False
+
+    limpia_pantalla()
+
+    borde_superior(f"{TEXTOS['simi_titulo']}", f"v{VERSION_ACTUAL_SIMI}")
+    muestra_contenido(
+        f"\n{TEXTOS['simi_descripcion']}\n\n"
+        f"\n{titulo_menu}\n"
+    )
+
+    # Planifica restaurar el BAK a XML
+    ruta_xml = ruta_instal_programa_bak.with_suffix('.xml')
+    bak_exitoso, idioma_restaurado = restaura_idioma_xml(ruta_xml)
+    if not bak_exitoso:
+        return False
+
+    # Ejecuta todas las operaciones pendientes de un solo saque
+    if operaciones_pendientes_admin:
+        #muestra_contenido(f"{Fore.LIGHTCYAN_EX}Aplicando cambios con permisos administrativos...\n")
+
+        success, results, error = ejecutar_operaciones_pendientes(
+            titulo=f"Restaurar idioma de {NOMBRE_PROGRAMA} {version_adobe}",
+            mensaje=f"Se requieren permisos de administrador para restaurar el idioma de {NOMBRE_PROGRAMA} {version_adobe}.",
+            muestra_mensaje_func=muestra_contenido
+        )
+
+        if not success:
+            muestra_contenido(f"{Fore.LIGHTRED_EX}{TEXTOS['no_cambio']}\nError: {error}\n")
+            borde_inferior()
+
+            muestra_input_usuario(f"{TEXTOS['input_menu_anterior']}").strip()
+            return False
+
+        muestra_contenido(
+            f"{Fore.LIGHTGREEN_EX}{TEXTOS['restauro_correctamente_1']} {idioma_restaurado} {TEXTOS['restauro_correctamente_2']} [{ruta_instal_programa_bak}]\n"
+        )
+    else: # No necesita permisos de admin
+        muestra_contenido(
+            f"{Fore.LIGHTGREEN_EX}{TEXTOS['restauro_correctamente_1']} {idioma_restaurado} {TEXTOS['restauro_correctamente_2']} [{ruta_instal_programa_bak}]\n"
+        )
+    borde_inferior()
+
+    muestra_input_usuario(f"{TEXTOS['input_menu_anterior']}").strip()
+    return True
+
+def restaurar_xml_illustrator(version_adobe):
+    """
+    Restaura el idioma de Illustrator usando el archivo application.bak, la versión y ruta ingresada por el usuario
+
+    Args:
+	    version_adobe (int): Int que puede ser 2018-2025+
+    """
+
+    global ruta_instal_print, operaciones_pendientes_admin
+    operaciones_pendientes_admin = [] # Inicializa la lista
+
+    NOMBRE_PROGRAMA = "Illustrator"
+    titulo_menu = titulo_subrayado(f"{TEXTOS['menu_restaurar_xml']} {TEXTOS['de']} {NOMBRE_PROGRAMA} {version_adobe} {TEXTOS['menu_usando_bak']}")
+
+    limpia_pantalla()
+    borde_superior(f"{TEXTOS['simi_titulo']}", f"v{VERSION_ACTUAL_SIMI}")
+    muestra_contenido(
+        f"\n{TEXTOS['simi_descripcion']}\n\n"
+        f"\n{titulo_menu}"
+    )
+
+    # Pide ruta al usuario
+    ruta_instal_programa_bak = ruta_instal_print = ruta_instalacion_programa(
+        ruta_subcarpeta=f"Adobe {NOMBRE_PROGRAMA} {version_adobe}", # Ruta Windows
+        nombre_programa='illustrator', # Ruta macOS
+        version_adobe=version_adobe # Versión macOS
+    )
+
+    # Ruta del BAK según el sistema operativo
+    RUTA_BAK = {
+        'Windows': Path(ruta_instal_programa_bak) / 'Support Files' / 'Contents' / 'Windows' / 'AMT' / 'application.bak',
+        'Darwin': Path(ruta_instal_programa_bak) / 'Support Files' / 'AMT' / 'AI' / 'AMT' / 'application.bak'
+    }
+
+    ruta_instal_programa_bak = RUTA_BAK.get(platform.system())
+
+    limpia_pantalla()
+    borde_superior(f"{TEXTOS['simi_titulo']}", f"v{VERSION_ACTUAL_SIMI}")
+    muestra_contenido(
+        f"\n{TEXTOS['simi_descripcion']}\n\n"
+        f"\n{titulo_menu}\n"
+    )
+
+    # Cierra el programa
+    chequea_cierra_app(f"Adobe {NOMBRE_PROGRAMA} {version_adobe}")
+    borde_inferior()
+
+    # Chequea si el archivo BAK existe
+    if not ruta_instal_programa_bak or not ruta_instal_programa_bak.exists():
+        limpia_pantalla()
+
+        borde_superior(f"{TEXTOS['simi_titulo']}", f"v{VERSION_ACTUAL_SIMI}")
+        muestra_contenido(
+            f"\n{TEXTOS['simi_descripcion']}\n\n"
+            f"\n{titulo_menu}\n\n"
+            f"{Fore.LIGHTRED_EX}{TEXTOS['no_restauro']}\n\n"
+            f"{Fore.LIGHTYELLOW_EX}{TEXTOS['razones_bak']}\n"
+        )
+        borde_inferior()
+
+        muestra_input_usuario(f"{TEXTOS['input_menu_anterior']}").strip()
+        return False
+
+    limpia_pantalla()
+
+    borde_superior(f"{TEXTOS['simi_titulo']}", f"v{VERSION_ACTUAL_SIMI}")
+    muestra_contenido(
+        f"\n{TEXTOS['simi_descripcion']}\n\n"
+        f"\n{titulo_menu}\n"
+    )
+
+    # Planifica restaurar el BAK a XML
+    ruta_xml = ruta_instal_programa_bak.with_suffix('.xml')
+    bak_exitoso, idioma_restaurado = restaura_idioma_xml(ruta_xml)
+    if not bak_exitoso:
+        return False
+
+    # Ejecuta todas las operaciones pendientes de un solo saque
+    if operaciones_pendientes_admin:
+        #muestra_contenido(f"{Fore.LIGHTCYAN_EX}Aplicando cambios con permisos administrativos...\n")
+
+        success, results, error = ejecutar_operaciones_pendientes(
+            titulo=f"Restaurar idioma de {NOMBRE_PROGRAMA} {version_adobe}",
+            mensaje=f"Se requieren permisos de administrador para restaurar el idioma de {NOMBRE_PROGRAMA} {version_adobe}.",
+            muestra_mensaje_func=muestra_contenido
+        )
+
+        if not success:
+            muestra_contenido(f"{Fore.LIGHTRED_EX}{TEXTOS['no_cambio']}\nError: {error}\n")
+            borde_inferior()
+
+            muestra_input_usuario(f"{TEXTOS['input_menu_anterior']}").strip()
+            return False
+
+        muestra_contenido(
+            f"{Fore.LIGHTGREEN_EX}{TEXTOS['restauro_correctamente_1']} {idioma_restaurado} {TEXTOS['restauro_correctamente_2']} [{ruta_instal_programa_bak}]\n"
+        )
+    else: # No necesita permisos de admin
+        muestra_contenido(
+            f"{Fore.LIGHTGREEN_EX}{TEXTOS['restauro_correctamente_1']} {idioma_restaurado} {TEXTOS['restauro_correctamente_2']} [{ruta_instal_programa_bak}]\n"
+        )
+    borde_inferior()
+
+    muestra_input_usuario(f"{TEXTOS['input_menu_anterior']}").strip()
+    return True
+
+def restaurar_xml_incopy(version_adobe):
+    """
+    Restaura el idioma de InCopy usando el archivo application.bak, la versión y ruta ingresada por el usuario
+
+    Args:
+	    version_adobe (int): Int que puede ser 2018-2025+
+    """
+
+    global ruta_instal_print, operaciones_pendientes_admin
+    operaciones_pendientes_admin = [] # Inicializa la lista
+
+    NOMBRE_PROGRAMA = "InCopy"
+    titulo_menu = titulo_subrayado(f"{TEXTOS['menu_restaurar_xml']} {TEXTOS['de']} {NOMBRE_PROGRAMA} {version_adobe} {TEXTOS['menu_usando_bak']}")
+
+    limpia_pantalla()
+    borde_superior(f"{TEXTOS['simi_titulo']}", f"v{VERSION_ACTUAL_SIMI}")
+    muestra_contenido(
+        f"\n{TEXTOS['simi_descripcion']}\n\n"
+        f"\n{titulo_menu}"
+    )
+
+    # Pide ruta al usuario
+    ruta_instal_programa_bak = ruta_instal_print = ruta_instalacion_programa(
+        ruta_subcarpeta=f"Adobe {NOMBRE_PROGRAMA} {version_adobe}", # Ruta Windows
+        nombre_programa='incopy', # Ruta macOS
+        version_adobe=version_adobe # Versión macOS
+    )
+
+    # Ruta del BAK según el sistema operativo
+    RUTA_BAK = {
+        'Windows': Path(ruta_instal_programa_bak) / 'AMT' / 'application.bak',
+        'Darwin': Path(ruta_instal_programa_bak) / 'Resources' / 'AMT' / 'IC' / 'AMT' / 'application.bak'
+    }
+
+    ruta_instal_programa_bak = RUTA_BAK.get(platform.system())
+
+    limpia_pantalla()
+    borde_superior(f"{TEXTOS['simi_titulo']}", f"v{VERSION_ACTUAL_SIMI}")
+    muestra_contenido(
+        f"\n{TEXTOS['simi_descripcion']}\n\n"
+        f"\n{titulo_menu}\n"
+    )
+
+    # Cierra el programa
+    chequea_cierra_app(f"Adobe {NOMBRE_PROGRAMA} {version_adobe}")
+    borde_inferior()
+
+    # Chequea si el archivo BAK existe
+    if not ruta_instal_programa_bak or not ruta_instal_programa_bak.exists():
+        limpia_pantalla()
+
+        borde_superior(f"{TEXTOS['simi_titulo']}", f"v{VERSION_ACTUAL_SIMI}")
+        muestra_contenido(
+            f"\n{TEXTOS['simi_descripcion']}\n\n"
+            f"\n{titulo_menu}\n\n"
+            f"{Fore.LIGHTRED_EX}{TEXTOS['no_restauro']}\n\n"
+            f"{Fore.LIGHTYELLOW_EX}{TEXTOS['razones_bak']}\n"
+        )
+        borde_inferior()
+
+        muestra_input_usuario(f"{TEXTOS['input_menu_anterior']}").strip()
+        return False
+
+    limpia_pantalla()
+
+    borde_superior(f"{TEXTOS['simi_titulo']}", f"v{VERSION_ACTUAL_SIMI}")
+    muestra_contenido(
+        f"\n{TEXTOS['simi_descripcion']}\n\n"
+        f"\n{titulo_menu}\n"
+    )
+
+    # Planifica restaurar el BAK a XML
+    ruta_xml = ruta_instal_programa_bak.with_suffix('.xml')
+    bak_exitoso, idioma_restaurado = restaura_idioma_xml(ruta_xml)
+    if not bak_exitoso:
+        return False
+
+    # Ejecuta todas las operaciones pendientes de un solo saque
+    if operaciones_pendientes_admin:
+        #muestra_contenido(f"{Fore.LIGHTCYAN_EX}Aplicando cambios con permisos administrativos...\n")
+
+        success, results, error = ejecutar_operaciones_pendientes(
+            titulo=f"Restaurar idioma de {NOMBRE_PROGRAMA} {version_adobe}",
+            mensaje=f"Se requieren permisos de administrador para restaurar el idioma de {NOMBRE_PROGRAMA} {version_adobe}.",
+            muestra_mensaje_func=muestra_contenido
+        )
+
+        if not success:
+            muestra_contenido(f"{Fore.LIGHTRED_EX}{TEXTOS['no_cambio']}\nError: {error}\n")
+            borde_inferior()
+
+            muestra_input_usuario(f"{TEXTOS['input_menu_anterior']}").strip()
+            return False
+
+        muestra_contenido(
+            f"{Fore.LIGHTGREEN_EX}{TEXTOS['restauro_correctamente_1']} {idioma_restaurado} {TEXTOS['restauro_correctamente_2']} [{ruta_instal_programa_bak}]\n"
+        )
+    else: # No necesita permisos de admin
+        muestra_contenido(
+            f"{Fore.LIGHTGREEN_EX}{TEXTOS['restauro_correctamente_1']} {idioma_restaurado} {TEXTOS['restauro_correctamente_2']} [{ruta_instal_programa_bak}]\n"
+        )
+    borde_inferior()
+
+    muestra_input_usuario(f"{TEXTOS['input_menu_anterior']}").strip()
+    return True
+
+def restaurar_xml_character_animator(version_adobe):
+    """
+    Restaura el idioma de Character Animator usando el archivo application.bak, la versión y ruta ingresada por el usuario
+
+    Args:
+	    version_adobe (int): Int que puede ser 2018-2025+
+    """
+
+    global ruta_instal_print, operaciones_pendientes_admin
+    operaciones_pendientes_admin = [] # Inicializa la lista
+
+    NOMBRE_PROGRAMA = "Character Animator"
+    titulo_menu = titulo_subrayado(f"{TEXTOS['menu_restaurar_xml']} {TEXTOS['de']} {NOMBRE_PROGRAMA} {version_adobe} {TEXTOS['menu_usando_bak']}")
+
+    limpia_pantalla()
+    borde_superior(f"{TEXTOS['simi_titulo']}", f"v{VERSION_ACTUAL_SIMI}")
+    muestra_contenido(
+        f"\n{TEXTOS['simi_descripcion']}\n\n"
+        f"\n{titulo_menu}"
+    )
+
+    # Pide ruta al usuario
+    ruta_instal_programa_bak = ruta_instal_print = ruta_instalacion_programa(
+        ruta_subcarpeta=f"Adobe {NOMBRE_PROGRAMA} {version_adobe}", # Ruta Windows
+        nombre_programa='character_animator', # Ruta macOS
+        version_adobe=version_adobe # Versión macOS
+    )
+
+    # Ruta del BAK según el sistema operativo
+    RUTA_BAK = {
+        'Windows': Path(ruta_instal_programa_bak) / 'Support Files' / 'AMT' / 'application.bak',
+        'Darwin': Path(ruta_instal_programa_bak) / 'AMT' / 'application.bak'
+    }
+
+    ruta_instal_programa_bak = RUTA_BAK.get(platform.system())
+
+    limpia_pantalla()
+    borde_superior(f"{TEXTOS['simi_titulo']}", f"v{VERSION_ACTUAL_SIMI}")
+    muestra_contenido(
+        f"\n{TEXTOS['simi_descripcion']}\n\n"
+        f"\n{titulo_menu}\n"
+    )
+
+    # Cierra el programa
+    chequea_cierra_app(f"Adobe {NOMBRE_PROGRAMA} {version_adobe}")
+    borde_inferior()
+
+    # Chequea si el archivo BAK existe
+    if not ruta_instal_programa_bak or not ruta_instal_programa_bak.exists():
+        limpia_pantalla()
+
+        borde_superior(f"{TEXTOS['simi_titulo']}", f"v{VERSION_ACTUAL_SIMI}")
+        muestra_contenido(
+            f"\n{TEXTOS['simi_descripcion']}\n\n"
+            f"\n{titulo_menu}\n\n"
+            f"{Fore.LIGHTRED_EX}{TEXTOS['no_restauro']}\n\n"
+            f"{Fore.LIGHTYELLOW_EX}{TEXTOS['razones_bak']}\n"
+        )
+        borde_inferior()
+
+        muestra_input_usuario(f"{TEXTOS['input_menu_anterior']}").strip()
+        return False
+
+    limpia_pantalla()
+
+    borde_superior(f"{TEXTOS['simi_titulo']}", f"v{VERSION_ACTUAL_SIMI}")
+    muestra_contenido(
+        f"\n{TEXTOS['simi_descripcion']}\n\n"
+        f"\n{titulo_menu}\n"
+    )
+
+    # Planifica restaurar el BAK a XML
+    ruta_xml = ruta_instal_programa_bak.with_suffix('.xml')
+    bak_exitoso, idioma_restaurado = restaura_idioma_xml(ruta_xml)
+    if not bak_exitoso:
+        return False
+
+    # Ejecuta todas las operaciones pendientes de un solo saque
+    if operaciones_pendientes_admin:
+        #muestra_contenido(f"{Fore.LIGHTCYAN_EX}Aplicando cambios con permisos administrativos...\n")
+
+        success, results, error = ejecutar_operaciones_pendientes(
+            titulo=f"Restaurar idioma de {NOMBRE_PROGRAMA} {version_adobe}",
+            mensaje=f"Se requieren permisos de administrador para restaurar el idioma de {NOMBRE_PROGRAMA} {version_adobe}.",
+            muestra_mensaje_func=muestra_contenido
+        )
+
+        if not success:
+            muestra_contenido(f"{Fore.LIGHTRED_EX}{TEXTOS['no_cambio']}\nError: {error}\n")
+            borde_inferior()
+
+            muestra_input_usuario(f"{TEXTOS['input_menu_anterior']}").strip()
+            return False
+
+        muestra_contenido(
+            f"{Fore.LIGHTGREEN_EX}{TEXTOS['restauro_correctamente_1']} {idioma_restaurado} {TEXTOS['restauro_correctamente_2']} [{ruta_instal_programa_bak}]\n"
+        )
+    else: # No necesita permisos de admin
+        muestra_contenido(
+            f"{Fore.LIGHTGREEN_EX}{TEXTOS['restauro_correctamente_1']} {idioma_restaurado} {TEXTOS['restauro_correctamente_2']} [{ruta_instal_programa_bak}]\n"
+        )
+    borde_inferior()
+
+    muestra_input_usuario(f"{TEXTOS['input_menu_anterior']}").strip()
+    return True
+
 def pantalla_splash():
     """
     Muestra una pantalla de inicio con un aviso sobre los paquetes de idioma y espera input del usuario
@@ -3336,15 +4428,66 @@ def pantalla_splash():
         )
         borde_inferior()
 
-        muestra_input_usuario(f"{TEXTOS['input_continuar']}").strip
+        muestra_input_usuario(f"{TEXTOS['input_continuar']}").strip()
         menu_principal()
+
         return
 
-def menu_terciario():
+def menu_terciario(modo='cambiar'):
     """
-    Muestra el menú terciario de Simi con los programas de Adobe y permite ir a otros menús mediante inputs del usuario.
+    Muestra el menú terciario de Simi con los programas de Adobe y permite ir a otros menús mediante inputs del usuario
+
+    Args:
+        modo: 'cambiar' para cambiar idioma, 'restaurar' para restaurar desde backup
     """
-    titulo_menu = titulo_subrayado(f"Adobe {version_adobe} - {TEXTOS['cambiar_a']} {idioma_menu_ui}")
+    if modo == 'cambiar':
+        titulo_menu = titulo_subrayado(f"Adobe {version_adobe} - {TEXTOS['cambiar_a']} {idioma_menu_ui}")
+    else:
+        titulo_menu = titulo_subrayado(f"Adobe {version_adobe} - {TEXTOS['menu_restaurar_xml']} {TEXTOS['menu_usando_bak']}")
+
+    # Mapeo de programas a sus funciones
+    programas_funciones = {
+        '1': {
+            'cambiar': lambda: cambio_idioma_after_effects(locale_xml),
+            'restaurar': lambda: restaurar_xml_after_effects(version_adobe)
+        },
+        '2': {
+            'cambiar': lambda: cambio_idioma_premiere_pro(locale_xml),
+            'restaurar': lambda: restaurar_xml_premiere_pro(version_adobe)
+        },
+        '3': {
+            'cambiar': lambda: cambio_idioma_audition(locale_xml),
+            'restaurar': lambda: restaurar_xml_audition(version_adobe)
+        },
+        '4': {
+            'cambiar': lambda: cambio_idioma_indesign(locale_xml),
+            'restaurar': lambda: restaurar_xml_indesign(version_adobe)
+        },
+        '5': {
+            'cambiar': lambda: cambio_idioma_media_encoder(locale_xml),
+            'restaurar': lambda: restaurar_xml_media_encoder(version_adobe)
+        },
+        '6': {
+            'cambiar': lambda: cambio_idioma_photoshop(locale_xml),
+            'restaurar': lambda: restaurar_xml_photoshop(version_adobe)
+        },
+        '7': {
+            'cambiar': lambda: cambio_idioma_animate(locale_xml),
+            'restaurar': lambda: restaurar_xml_animate(version_adobe)
+        },
+        '8': {
+            'cambiar': lambda: cambio_idioma_illustrator(locale_xml),
+            'restaurar': lambda: restaurar_xml_illustrator(version_adobe)
+        },
+        '9': {
+            'cambiar': lambda: cambio_idioma_incopy(locale_xml),
+            'restaurar': lambda: restaurar_xml_incopy(version_adobe)
+        },
+        '10': {
+            'cambiar': lambda: cambio_idioma_character_animator(locale_xml),
+            'restaurar': lambda: restaurar_xml_character_animator(version_adobe)
+        }
+    }
 
     while True:
         limpia_pantalla()
@@ -3382,27 +4525,8 @@ def menu_terciario():
 
         seleccion = muestra_input_usuario().strip()
 
-        if seleccion == '1':
-            cambio_idioma_after_effects(locale_xml)
-        elif seleccion == '2':
-            cambio_idioma_premiere_pro(locale_xml)
-        elif seleccion == '3':
-            cambio_idioma_audition(locale_xml)
-        elif seleccion == '4':
-            cambio_idioma_indesign(locale_xml)
-        elif seleccion == '5':
-            cambio_idioma_media_encoder(locale_xml)
-        elif seleccion == '6':
-            cambio_idioma_photoshop(locale_xml)
-        elif seleccion == '7':
-            cambio_idioma_animate(locale_xml)
-        elif seleccion == '8':
-            cambio_idioma_illustrator(locale_xml)
-        elif seleccion == '9':
-            cambio_idioma_incopy(locale_xml)
-        elif seleccion == '10' and version_adobe != 2025: # Sólo es válido cuando se hace visible arriba
-            cambio_idioma_character_animator(locale_xml)
-        elif seleccion == str(ultima_opcion+1):
+        # Primero chequea las opciones de navegación (tienen prioridad)
+        if seleccion == str(ultima_opcion+1):
             menu_principal()
             return
         elif seleccion == str(ultima_opcion+2):
@@ -3411,15 +4535,29 @@ def menu_terciario():
             abre_url_reportar_error()
         elif seleccion == str(ultima_opcion+4):
             cierra_programa()
+        # Luego ejecuta función del programa seleccionado
+        elif seleccion in programas_funciones:
+            # Chequea que Character Animator no esté disponible en 2025
+            if seleccion == '10' and version_adobe == 2025:
+                muestra_input_usuario(f"{TEXTOS['input_error_menu']}").strip()
+            else:
+                # Ejecuta función correspondiente al modo
+                programas_funciones[seleccion][modo]()
         else:
             muestra_input_usuario(f"{TEXTOS['input_error_menu']}").strip()
 
-def menu_secundario():
+def menu_secundario(modo='cambiar'):
     """
-    Muestra el menú secundario de Simi con las versiones de Adobe y permite ir a otros menús mediante inputs del usuario.
-    Guarda info de la versión de los programas de Adobe para usar posteriormente en otras funciones.
+    Muestra el menú secundario de Simi con las versiones de Adobe y permite ir a otros menús mediante inputs del usuario
+    Guarda info de la versión de los programas de Adobe para usar posteriormente en otras funciones
+
+    Args:
+        modo: 'cambiar' para cambiar idioma, 'restaurar' para restaurar desde backup
     """
-    titulo_menu = titulo_subrayado(f"{TEXTOS['cambiar_programas']} {idioma_menu_ui}")
+    if modo == 'cambiar':
+        titulo_menu = titulo_subrayado(f"{TEXTOS['cambiar_programas']} {idioma_menu_ui}")
+    else:
+        titulo_menu = titulo_subrayado(f"{TEXTOS['menu_restaurar_xml']} {TEXTOS['menu_usando_bak']}")
 
     global version_adobe # Se usa afuera de esta función
 
@@ -3447,30 +4585,20 @@ def menu_secundario():
 
         seleccion = muestra_input_usuario().strip()
 
-        if seleccion == '1':
-            version_adobe = 2025
-            menu_terciario()
-        elif seleccion == '2':
-            version_adobe = 2024
-            menu_terciario()
-        elif seleccion == '3':
-            version_adobe = 2023
-            menu_terciario()
-        elif seleccion == '4':
-            version_adobe = 2022
-            menu_terciario()
-        elif seleccion == '5':
-            version_adobe = 2021
-            menu_terciario()
-        elif seleccion == '6':
-            version_adobe = 2020
-            menu_terciario()
-        elif seleccion == '7':
-            version_adobe = 2019
-            menu_terciario()
-        elif seleccion == '8':
-            version_adobe = 2018
-            menu_terciario()
+        if seleccion in ['1', '2', '3', '4', '5', '6', '7', '8']:
+            # Mapeo de selección a año
+            version_map = {
+                '1': 2025,
+                '2': 2024,
+                '3': 2023,
+                '4': 2022,
+                '5': 2021,
+                '6': 2020,
+                '7': 2019,
+                '8': 2018
+            }
+            version_adobe = version_map[seleccion]
+            menu_terciario(modo)
         elif seleccion == '9':
             menu_principal()
             return
@@ -3485,8 +4613,8 @@ def menu_secundario():
 
 def menu_principal():
     """
-    Muestra el menú principal de Simi y permite ir a otros menús mediante inputs del usuario.
-    Guarda info de idiomas para usar posteriormente en otras funciones.
+    Muestra el menú principal de Simi y permite ir a otros menús mediante inputs del usuario
+    Guarda info de idiomas para usar posteriormente en otras funciones
     """
     titulo_menu = titulo_subrayado(f"{TEXTOS['menu_principal']}")
 
@@ -3502,10 +4630,11 @@ def menu_principal():
             f"\n{titulo_menu}\n\n"
             f"[1] {TEXTOS['menu_cambio_espanol']}\n"
             f"[2] {TEXTOS['menu_cambio_ingles']}\n"
-            f"[3] {TEXTOS['menu_buscar_version']}\n"
-            f"[4] {TEXTOS['menu_ayuda']}\n"
-            f"[5] {TEXTOS['menu_reportar_error']}\n"
-            f"[6] {TEXTOS['menu_salir']}\n"
+            f"[3] {TEXTOS['menu_restaurar_xml']} {TEXTOS['menu_usando_bak']}\n" # Nueva opción
+            f"[4] {TEXTOS['menu_buscar_version']}\n"
+            f"[5] {TEXTOS['menu_ayuda']}\n"
+            f"[6] {TEXTOS['menu_reportar_error']}\n"
+            f"[7] {TEXTOS['menu_salir']}\n"
         )
         borde_inferior()
 
@@ -3514,18 +4643,21 @@ def menu_principal():
         if seleccion == '1':
             idioma_menu_ui = 'español'
             locale_xml = 'es_ES'
-            menu_secundario()
+            menu_secundario(modo='cambiar')
         elif seleccion == '2':
             idioma_menu_ui = 'inglés'
             locale_xml = 'en_US'
-            menu_secundario()
+            menu_secundario(modo='cambiar')
         elif seleccion == '3':
-            version_update()
+            idioma_menu_ui = ""
+            menu_secundario(modo='restaurar')
         elif seleccion == '4':
-            abre_url_ayuda()
+            version_update()
         elif seleccion == '5':
-            abre_url_reportar_error()
+            abre_url_ayuda()
         elif seleccion == '6':
+            abre_url_reportar_error()
+        elif seleccion == '7':
             cierra_programa()
         else:
             muestra_input_usuario(f"{TEXTOS['input_error_menu']}").strip()
