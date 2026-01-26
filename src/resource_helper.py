@@ -2,82 +2,85 @@
 # -*- coding: utf-8 -*-
 
 """
-Resource helper for finding files in both development and PyInstaller environments
+Helper para encontrar archivos en entornos de desarrollo y de PyInstaller
+
+Copyright (C) 2025 Leandro Pérez
+Este proyecto está bajo la Licencia GPLv2 - ver LICENSE para más detalles
 """
+
 import os
 import sys
-from pathlib import Path
 
-def get_resource_path(relative_path):
+def get_ruta_resource(ruta_relativa):
     """
-    Get absolute path to resource, works for dev and for PyInstaller.
+    Obtiene la ruta absoluta donde se encuentran los archivos, funciona en entornos dev y de PyInstaller
 
     Args:
-        relative_path: Path relative to the project root (e.g., 'src/simi.py')
+        ruta_relativa: Ruta relativa al root del proyecto (ej: 'src/main.py')
 
     Returns:
-        Absolute path to the resource
+        Ruta absoluta al archivo
     """
     try:
-        # PyInstaller creates a temp folder and stores path in _MEIPASS
-        base_path = getattr(sys, '_MEIPASS', None)
-        if base_path is None:
+        # PyInstaller usa la carpeta temporal _MEIPASS
+        ruta_base = getattr(sys, '_MEIPASS', None)
+        if ruta_base is None:
             raise AttributeError("_MEIPASS not found")
 
     except (AttributeError, Exception):
-        # Development mode - use the directory containing this script
-        base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        # Entorno de desarrollo, usa la carpeta que contiene este script
+        ruta_base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-    return os.path.join(base_path, relative_path)
+    return os.path.join(ruta_base, ruta_relativa)
 
-def get_script_path(script_name):
+def get_ruta_script(nombre_script):
     """
-    Get path to a script file, handling PyInstaller and development environments.
+    Obtiene la ruta donde se encuentra un script
 
     Args:
-        script_name: Name of the script (e.g., 'simi.py')
+        nombre_script: Nombre del script (ej: 'main.py')
 
     Returns:
-        Absolute path to the script
+        Ruta absoluta al script
     """
-    return get_resource_path(f'src/{script_name}')
+    return get_ruta_resource(f'src/{nombre_script}')
 
-def resource_exists(relative_path):
+def existe_archivo(ruta_relativa):
     """
-    Check if a resource exists.
+    Chequea si un archivo existe
 
     Args:
-        relative_path: Path relative to the project root
+        ruta_relativa: Ruta relativa al root del proyecto
 
     Returns:
-        True if the resource exists, False otherwise
+        True si el archivo existe, caso contrario False
     """
-    return os.path.exists(get_resource_path(relative_path))
+    return os.path.exists(get_ruta_resource(ruta_relativa))
 
-def get_asset_path(asset_name):
+def get_ruta_asset(nombre_asset):
     """
-    Get path to an asset file, handling PyInstaller and development environments.
+    Obtiene la ruta donde se encuentra un asset
 
     Args:
-        asset_name: Name of the asset (e.g., 'icono_win.ico')
+        nombre_asset: Nombre del asset (ej: 'icono_win.ico')
 
     Returns:
-        Absolute path to the asset
+        Ruta absoluta al asset
     """
-    return get_resource_path(f'assets/{asset_name}')
+    return get_ruta_resource(f'assets/{nombre_asset}')
 
-def get_base_path():
+def get_ruta_base():
     """
-    Get the base path of the application (useful for debugging).
+    Obtiene la ruta base de la app
 
     Returns:
-        Base path string
+        Ruta base como string
     """
     try:
-        base_path = getattr(sys, '_MEIPASS', None)
-        if base_path is None:
-            raise AttributeError("_MEIPASS not found")
-        return base_path
+        ruta_base = getattr(sys, '_MEIPASS', None)
+        if ruta_base is None:
+            raise AttributeError("_MEIPASS no encontrada")
+        return ruta_base
 
     except (AttributeError, Exception):
         return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

@@ -1,3 +1,8 @@
-colorama==0.4.6
-psutil==7.0.0
-requests==2.32.4
+# Simi - Dependencias Python
+# Instalación en Windows: pip install -r requirements.txt
+# Instalación en macOS: pip3 install -r requirements.txt
+
+colorama>=0.4.6
+requests>=2.31.0
+psutil>=5.9.0
+tkinterdnd2>=0.3.0
