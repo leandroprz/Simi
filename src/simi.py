@@ -6,7 +6,7 @@ Simi by Leandro Pérez
 Cambiá el idioma de los programas de Adobe sin reinstalarlos
 https://leandroperez.art/tienda/productos-gratuitos/simi-cambia-idioma-adobe-sin-reinstalar/
 
-Versión multiplataforma para Windows y macOS.
+Versión multiplataforma para Windows y macOS
 """
 
 import os
@@ -43,7 +43,7 @@ PADDING_INT = 3
 PADDING_EXT = 4
 
 # Constantes Simi
-VERSION_ACTUAL_SIMI = "2.3"
+VERSION_ACTUAL_SIMI = "2.4"
 NOMBRE_RELEASE = "Simi_v"
 
 # Constantes idiomas
@@ -140,6 +140,7 @@ TEXTOS = {
     'descarga_a_medias_2': 'Se descargaron',
     'descarga_a_medias_3': 'pero deberían haberse descargado',
     'descarga_exitosa': 'El archivo se descargó correctamente en la ruta:',
+    'error_descarga_idioma': 'No se pudo descargar correctamente el paquete de idioma.',
     'error_descarga': 'No se pudo descargar el archivo.',
     'error_guardar_archivo': 'No se pudo guardar el archivo.',
     'no_pudo_chequear_version': 'No se pudo comprobar la última versión.',
@@ -159,6 +160,9 @@ TEXTOS = {
     'mensaje_resenia': '¡No olvides dejarnos una reseña en www.leandroperez.art!',
     'mensaje_url_ayuda': 'En breve se abrirá la página de ayuda.',
     'mensaje_reportar_error': 'En breve se abrirá la página para reportar un error.',
+    'aviso_importante_1': 'Aviso importante',
+    'aviso_importante_2': 'Los paquetes de idioma que se usan en este programa pertenecen a Adobe y sus respectivos propietarios.',
+    'aviso_importante_3': 'Este software solo facilita su gestión y se proporcionan únicamente con fines educativos.',
     # Misc
     'barra_progreso_modo1': 'Modo no soportado:',
     'barra_progreso_modo2': 'Usá descarga, unzip o copia.',
@@ -1007,11 +1011,11 @@ def requiere_permisos_administrativos(ruta):
             "/Applications",
             "/Library/Application Support"
         ]
-        
+
         # Chequea rutas del sistema
         if any(ruta.startswith(protegida) for protegida in rutas_protegidas):
             return True
-        
+
         # Chequea si el archivo/carpeta existe y pertenece a root
         try:
             if os.path.exists(ruta):
@@ -1026,7 +1030,7 @@ def requiere_permisos_administrativos(ruta):
                     stat_info = os.stat(carpeta_padre)
                     if stat_info.st_uid == 0:
                         return True
-        
+
         except (OSError, PermissionError):
             # Si no se puede acceder, asume que requiere permisos
             return True
@@ -1051,24 +1055,24 @@ def chequea_permisos_escritura(ruta):
                 stat_info = os.stat(ruta)
                 if stat_info.st_uid == 0:
                     return False
-            
+
             # Intenta crear un archivo temporal para chequear los permisos de escritura
             archivo_prueba = os.path.join(ruta, ".test_temp")
             with open(archivo_prueba, 'w') as f:
                 f.write("test")
             os.remove(archivo_prueba)
             return True
-        
+
         else:
             # Si no existe, intenta crear la carpeta
             os.makedirs(ruta, exist_ok=True)
-            
+
             # Chequea si la carpeta creada pertenece a root en macOS
             if platform.system() == 'Darwin':
                 stat_info = os.stat(ruta)
                 if stat_info.st_uid == 0:
                     return False
-            
+
             # Intenta crear un archivo temporal
             archivo_prueba = os.path.join(ruta, ".test_temp")
             with open(archivo_prueba, 'w') as f:
@@ -1441,7 +1445,7 @@ def _ejecuta_operacion_directa(operacion):
                 # El archivo no existe, chequea la carpeta padre
                 if not chequea_permisos_escritura(carpeta_destino if os.path.exists(carpeta_destino) else os.path.dirname(carpeta_destino)):
                     raise PermissionError(f"{TEXTOS['permisos_insuficientes']} {operacion['destino']}")
-            
+
             os.makedirs(carpeta_destino, exist_ok=True)
             with open(operacion['destino'], 'w', encoding=operacion.get('encoding', 'utf-8')) as f:
                 f.write(operacion['contenido'])
@@ -1456,7 +1460,7 @@ def _ejecuta_operacion_directa(operacion):
     except PermissionError as e:
         # Propaga el error de permisos para que sea manejado correctamente
         raise e
-    
+
     except Exception as e:
         muestra_contenido(f"{Fore.LIGHTRED_EX}{TEXTOS['error_operacion']} {e}\n")
         return False
@@ -1760,7 +1764,7 @@ def descargar_archivo(url, auto_unzip=False, ruta_unzip=None, ruta_destino=None,
             mapeo_carpetas = {
                 'locales': 'idiomas'
             }
-            
+
             # Si se proporciona ultima_version, agregar mapeo para esa versión
             if ultima_version:
                 mapeo_carpetas[f'v{ultima_version}'] = 'versiones'
@@ -1784,7 +1788,7 @@ def descargar_archivo(url, auto_unzip=False, ruta_unzip=None, ruta_destino=None,
         # Chequea si el archivo existe
         if os.path.exists(ruta_archivo):
             muestra_contenido(f"{Fore.LIGHTCYAN_EX}{TEXTOS['archivo_existente']}\n[{ruta_archivo}]")
-            
+
             # Si es un archivo ZIP y auto_unzip está habilitado, procede con la descompresión
             if auto_unzip and ruta_archivo.lower().endswith('.zip'):
                 if ruta_unzip is None:
@@ -1796,7 +1800,7 @@ def descargar_archivo(url, auto_unzip=False, ruta_unzip=None, ruta_destino=None,
                 if not descomp_exitosa:
                     muestra_contenido(f"{Fore.LIGHTRED_EX}{TEXTOS['descarga_no_descomprime']}\n")
                     return False, None
-            
+
             return True, ruta_archivo
 
         else:
@@ -2019,7 +2023,7 @@ def version_update():
 
                 # Descarga la nueva versión con ruta específica
                 descarga_exitosa, ruta_real_archivo = descargar_archivo(url_release_os, ruta_destino=ruta_archivo_descargado, ultima_version=ultima_version)
-                
+
                 if not descarga_exitosa:
                     muestra_contenido(f"{Fore.LIGHTRED_EX}{TEXTOS['no_descargo']}\n")
                     borde_inferior()
@@ -2562,7 +2566,7 @@ def cambio_idioma_indesign(locale_xml):
     # Descarga y planifica descompresión del zip
     descarga_exitosa = descargar_archivo(url_locale_programa, auto_unzip=True, ruta_unzip=ruta_extraccion_programa)
     if not descarga_exitosa:
-        muestra_contenido(f"{Fore.LIGHTRED_EX}No se pudo descargar correctamente el paquete de idioma.\n")
+        muestra_contenido(f"{Fore.LIGHTRED_EX}{TEXTOS['error_descarga_idioma']}\n")
         borde_inferior()
         muestra_input_usuario(f"{TEXTOS['input_menu_anterior']}").strip()
         return False
@@ -2789,7 +2793,7 @@ def cambio_idioma_photoshop(locale_xml):
     # Descarga y planifica descompresión del zip
     descarga_exitosa = descargar_archivo(url_locale_programa, auto_unzip=True, ruta_unzip=ruta_extraccion_programa)
     if not descarga_exitosa:
-        muestra_contenido(f"{Fore.LIGHTRED_EX}No se pudo descargar correctamente el paquete de idioma.\n")
+        muestra_contenido(f"{Fore.LIGHTRED_EX}{TEXTOS['error_descarga_idioma']}\n")
         borde_inferior()
         muestra_input_usuario(f"{TEXTOS['input_menu_anterior']}").strip()
         return False
@@ -2912,7 +2916,7 @@ def cambio_idioma_animate(locale_xml):
     # Descarga y planifica descompresión del zip
     descarga_exitosa = descargar_archivo(url_locale_programa, auto_unzip=True, ruta_unzip=ruta_extraccion_programa)
     if not descarga_exitosa:
-        muestra_contenido(f"{Fore.LIGHTRED_EX}No se pudo descargar correctamente el paquete de idioma.\n")
+        muestra_contenido(f"{Fore.LIGHTRED_EX}{TEXTOS['error_descarga_idioma']}\n")
         borde_inferior()
         muestra_input_usuario(f"{TEXTOS['input_menu_anterior']}").strip()
         return False
@@ -3040,7 +3044,7 @@ def cambio_idioma_illustrator(locale_xml):
     # Descarga y planifica descompresión del zip
     descarga_exitosa = descargar_archivo(url_locale_programa, auto_unzip=True, ruta_unzip=ruta_extraccion_programa)
     if not descarga_exitosa:
-        muestra_contenido(f"{Fore.LIGHTRED_EX}No se pudo descargar correctamente el paquete de idioma.\n")
+        muestra_contenido(f"{Fore.LIGHTRED_EX}{TEXTOS['error_descarga_idioma']}\n")
         borde_inferior()
         muestra_input_usuario(f"{TEXTOS['input_menu_anterior']}").strip()
         return False
@@ -3168,7 +3172,7 @@ def cambio_idioma_incopy(locale_xml):
     # Descarga y planifica descompresión del zip
     descarga_exitosa = descargar_archivo(url_locale_programa, auto_unzip=True, ruta_unzip=ruta_extraccion_programa)
     if not descarga_exitosa:
-        muestra_contenido(f"{Fore.LIGHTRED_EX}No se pudo descargar correctamente el paquete de idioma.\n")
+        muestra_contenido(f"{Fore.LIGHTRED_EX}{TEXTOS['error_descarga_idioma']}\n")
         borde_inferior()
         muestra_input_usuario(f"{TEXTOS['input_menu_anterior']}").strip()
         return False
@@ -3319,15 +3323,16 @@ def pantalla_splash():
     """
     Muestra una pantalla de inicio con un aviso sobre los paquetes de idioma y espera input del usuario
     """
+    titulo_menu = titulo_subrayado(f"{TEXTOS['aviso_importante_1']}")
+
     while True:
         limpia_pantalla()
 
         borde_superior(f"{TEXTOS['simi_titulo']}", f"v{VERSION_ACTUAL_SIMI}")
         muestra_contenido(
             f"\n{TEXTOS['simi_descripcion']}\n\n"
-            f"\n{titulo_subrayado('Aviso importante')}\n\n"
-            f"{Fore.LIGHTCYAN_EX}Los paquetes de idioma que se usan en este programa pertenecen a Adobe y sus respectivos propietarios.\n\n"
-            "Este software solo facilita su gestión y se proporcionan únicamente con fines educativos.\n"
+            f"\n{titulo_menu}\n\n"
+            f"{Fore.LIGHTCYAN_EX}{TEXTOS['aviso_importante_2']}\n\n{TEXTOS['aviso_importante_3']}\n"
         )
         borde_inferior()
 
