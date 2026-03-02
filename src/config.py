@@ -9,7 +9,7 @@ Este proyecto está bajo la Licencia GPLv2 - ver LICENSE para más detalles
 """
 
 # Constantes Simi
-VERSION_ACTUAL_SIMI = "2.6"
+VERSION_ACTUAL_SIMI = "2.7"
 NOMBRE_RELEASE = "Simi_v"
 
 # URLs locales, releases, etc
@@ -152,7 +152,8 @@ VERSIONES_ADOBE_MACOS = {
         2022: '22.0',
         2023: '23.0',
         2024: '24.0',
-        2025: '25.0'
+        2025: '25.0',
+        2026: '26.0'
     },
     'media_encoder': {
         2018: '12.0',
