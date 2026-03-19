@@ -162,6 +162,8 @@ def cambiar_idioma_programa(programa_key):
     # Mensaje exitoso
     if programa_key == 'photoshop':
         mensaje_extra = f"{Fore.LIGHTCYAN_EX}{TEXTOS['cambio_ps']}\n"
+    elif programa_key == 'premiere_pro':
+        mensaje_extra = f"{Fore.LIGHTYELLOW_EX}{TEXTOS['idioma_backup_1']} [{shared_state.ruta_backup_xml}]. {TEXTOS['idioma_backup_2']}\n\n{Fore.LIGHTCYAN_EX}{TEXTOS['cambio_ppro']}\n"
     else:
         mensaje_extra = f"{Fore.LIGHTYELLOW_EX}{TEXTOS['idioma_backup_1']} [{shared_state.ruta_backup_xml}]. {TEXTOS['idioma_backup_2']}\n"
 
