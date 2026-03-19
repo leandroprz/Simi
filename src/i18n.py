@@ -25,7 +25,7 @@ TEXTOS = {
     'menu_buscar_version': 'Buscar nueva versión de Simi',
     'menu_restaurar_xml': 'Restaurar idioma',
     'menu_usando_bak': 'usando backup de Simi',
-    'menu_ayuda': 'Ayuda',
+    'menu_ayuda': 'Ayuda y tutorial',
     'menu_reportar_error': 'Reportar un error',
     'menu_salir': 'Salir',
 
@@ -59,7 +59,7 @@ TEXTOS = {
     'macos_osascript_timeout2': 'Timeout al ejecutar las operaciones de cambio de idioma.',
     'permisos_insuficientes': 'No tenés permisos suficientes para realizar la operación:',
 
-    # ZIP
+    # Zip
     'no_pudo_descomprimir': 'No se pudo descomprimir',
     'zip_error_descomprimir': 'Error al descomprimir el archivo',
     'zip_no_valido_1': 'Error. El archivo',
@@ -87,6 +87,7 @@ TEXTOS = {
     'cambiar_a': 'Cambiar a',
     'cambiar_programas': 'Cambiar programas al',
     'cambio_ps': 'Podés elegir el nuevo idioma desde Photoshop, ingresando al menú Editar > Preferencias > Interfaz > Idioma de la interfaz.\nReiniciá Photoshop para ver los cambios.',
+    'cambio_ppro': 'Si no ves el nuevo idioma, probá cerrando y abriendo nuevamente Premiere Pro. Al reiniciarlo por segunda vez deberías ver el idioma cambiado.',
     'error_inesperado': 'Error inesperado:',
     'restauro_correctamente_1': 'El idioma se restauró correctamente al',
     'restauro_correctamente_2': 'usando la copia de seguridad en la ruta:',
