@@ -10,11 +10,12 @@ Este proyecto está bajo la Licencia GPLv2 - ver LICENSE para más detalles
 
 # Imports Simi
 import shared_state
+from i18n import TEXTOS
+from utils_app import set_idioma, inicializar_idioma
 from interfaz import limpia_pantalla, titulo_subrayado, borde_superior, borde_inferior, muestra_contenido, muestra_input_usuario
 from config import VERSION_ACTUAL_SIMI, CONFIG_PROGRAMAS_ADOBE
-from i18n import TEXTOS
 
-# Lazy import de colorama solo cuando se necesita
+# Importaremos Colorama solo cuando se necesite más abajo
 def get_fore():
     from colorama import Fore
     return Fore
@@ -23,6 +24,9 @@ def pantalla_splash():
     """
     Muestra mensaje sobre uso de las locales en Simi
     """
+    # Detecta idioma antes de mostrar la interfaz
+    shared_state.idioma_simi = inicializar_idioma()
+
     Fore = get_fore()
     titulo_menu = titulo_subrayado(f"{TEXTOS['aviso_importante_1']}")
 
@@ -44,9 +48,8 @@ def menu_principal():
     Muestra el menú principal de Simi y permite ir a otros menús mediante inputs del usuario
     Guarda info de idiomas para usar posteriormente
     """
-    titulo_menu = titulo_subrayado(f"{TEXTOS['menu_principal']}")
-
     while True:
+        titulo_menu = titulo_subrayado(f"{TEXTOS['menu_principal']}")
         limpia_pantalla()
         borde_superior(f"{TEXTOS['simi_titulo']}", f"v{VERSION_ACTUAL_SIMI}")
         muestra_contenido(
@@ -56,20 +59,21 @@ def menu_principal():
             f"[2] {TEXTOS['menu_cambio_ingles']}\n"
             f"[3] {TEXTOS['menu_restaurar_xml']} {TEXTOS['menu_usando_bak']}\n"
             f"[4] {TEXTOS['menu_buscar_version']}\n"
-            f"[5] {TEXTOS['menu_ayuda']}\n"
-            f"[6] {TEXTOS['menu_reportar_error']}\n"
-            f"[7] {TEXTOS['menu_salir']}\n"
+            f"[5] {TEXTOS['menu_cambiar_idioma_simi']}\n"
+            f"[6] {TEXTOS['menu_ayuda']}\n"
+            f"[7] {TEXTOS['menu_reportar_error']}\n"
+            f"[8] {TEXTOS['menu_salir']}\n"
         )
         borde_inferior()
 
         seleccion = muestra_input_usuario().strip()
 
         if seleccion == '1':
-            shared_state.idioma_menu_ui = 'español'
+            shared_state.idioma_menu_ui = 'español' if shared_state.idioma_simi == 'es' else 'Spanish'
             shared_state.locale_xml = 'es_ES'
             menu_secundario(modo='cambiar')
         elif seleccion == '2':
-            shared_state.idioma_menu_ui = 'inglés'
+            shared_state.idioma_menu_ui = 'inglés' if shared_state.idioma_simi == 'es' else 'English'
             shared_state.locale_xml = 'en_US'
             menu_secundario(modo='cambiar')
         elif seleccion == '3':
@@ -79,16 +83,68 @@ def menu_principal():
             from utils_app import version_update
             version_update()
         elif seleccion == '5':
+            menu_idioma_simi()
+        elif seleccion == '6':
             from utils_app import abre_url_ayuda
             abre_url_ayuda()
-        elif seleccion == '6':
+        elif seleccion == '7':
             from utils_app import abre_url_reportar_error
             abre_url_reportar_error()
-        elif seleccion == '7':
+        elif seleccion == '8':
             from utils_app import cierra_programa
             cierra_programa()
         else:
             muestra_input_usuario(f"{TEXTOS['input_error_menu']}").strip()
+
+def menu_idioma_simi():
+    """
+    Permite cambiar el idioma de la interfaz de Simi
+    """
+    titulo_menu = titulo_subrayado(f"{TEXTOS['menu_cambiar_idioma_simi']}")
+
+    while True:
+        limpia_pantalla()
+        borde_superior(f"{TEXTOS['simi_titulo']}", f"v{VERSION_ACTUAL_SIMI}")
+        muestra_contenido(
+            f"\n{TEXTOS['simi_descripcion']}\n\n"
+            f"\n{titulo_menu}\n\n"
+            f"[1] {TEXTOS['idioma_espanol']}\n"
+            f"[2] {TEXTOS['idioma_ingles']}\n"
+            f"[3] {TEXTOS['menu_principal']}\n"
+        )
+        borde_inferior()
+
+        seleccion = muestra_input_usuario().strip()
+
+        if seleccion == '1':
+            shared_state.idioma_simi = 'es'
+            set_idioma('es')
+            _mostrar_idioma_cambiado(TEXTOS['idioma_espanol'])
+            return
+        elif seleccion == '2':
+            shared_state.idioma_simi = 'en'
+            set_idioma('en')
+            _mostrar_idioma_cambiado(TEXTOS['idioma_ingles'])
+            return
+        elif seleccion == '3':
+            return
+        else:
+            muestra_input_usuario(f"{TEXTOS['input_error_menu']}").strip()
+
+def _mostrar_idioma_cambiado(nombre_idioma: str) -> None:
+    """ Helper para mostrar confirmación de cambio de idioma """
+    Fore = get_fore()
+    titulo_menu = titulo_subrayado(f"{TEXTOS['menu_cambiar_idioma_simi']}")
+    limpia_pantalla()
+    borde_superior(f"{TEXTOS['simi_titulo']}", f"v{VERSION_ACTUAL_SIMI}")
+
+    muestra_contenido(
+        f"\n{TEXTOS['simi_descripcion']}\n\n"
+        f"\n{titulo_menu}\n"
+        f"\n{Fore.LIGHTGREEN_EX}{TEXTOS['idioma_cambiado']} {nombre_idioma.lower()}.\n"
+    )
+    borde_inferior()
+    muestra_input_usuario(f"{TEXTOS['input_menu_anterior']}").strip()
 
 def menu_secundario(modo='cambiar'):
     """
@@ -98,12 +154,12 @@ def menu_secundario(modo='cambiar'):
     Args:
         modo: 'cambiar' para cambiar idioma, 'restaurar' para restaurar desde backup
     """
-    if modo == 'cambiar':
-        titulo_menu = titulo_subrayado(f"{TEXTOS['cambiar_programas']} {shared_state.idioma_menu_ui}")
-    else:
-        titulo_menu = titulo_subrayado(f"{TEXTOS['menu_restaurar_xml']} {TEXTOS['menu_usando_bak']}")
-
     while True:
+        if modo == 'cambiar':
+            titulo_menu = titulo_subrayado(f"{TEXTOS['cambiar_programas']} {shared_state.idioma_menu_ui}")
+        else:
+            titulo_menu = titulo_subrayado(f"{TEXTOS['menu_restaurar_xml']} {TEXTOS['menu_usando_bak']}")
+
         limpia_pantalla()
         borde_superior(f"{TEXTOS['simi_titulo']}", f"v{VERSION_ACTUAL_SIMI}")
         muestra_contenido(
@@ -130,15 +186,8 @@ def menu_secundario(modo='cambiar'):
         if seleccion in ['1', '2', '3', '4', '5', '6', '7', '8', '9']:
             # Mapeo de selección a año
             version_map = {
-                '1': 2026,
-                '2': 2025,
-                '3': 2024,
-                '4': 2023,
-                '5': 2022,
-                '6': 2021,
-                '7': 2020,
-                '8': 2019,
-                '9': 2018
+                '1': 2026, '2': 2025, '3': 2024, '4': 2023, '5': 2022,
+                '6': 2021, '7': 2020, '8': 2019, '9': 2018
             }
             shared_state.version_adobe = version_map[seleccion]
             menu_terciario(modo)
@@ -237,17 +286,15 @@ def menu_terciario(modo='cambiar'):
             abre_url_reportar_error()
         elif seleccion == str(opcion_salir):
             cierra_programa()
-        else:
-            # Selección de programa de Adobe
-            if seleccion in numero_a_key:
-                prog_key = numero_a_key[seleccion]
-
-                if modo == 'cambiar':
-                    cambiar_idioma_programa(prog_key)
-                else:
-                    restaurar_xml_programa(prog_key)
+        # Selección de programa de Adobe
+        elif seleccion in numero_a_key:
+            prog_key = numero_a_key[seleccion]
+            if modo == 'cambiar':
+                cambiar_idioma_programa(prog_key)
             else:
-                muestra_input_usuario(f"{TEXTOS['input_error_menu']}").strip()
+                restaurar_xml_programa(prog_key)
+        else:
+            muestra_input_usuario(f"{TEXTOS['input_error_menu']}").strip()
 
 if __name__ == "__main__":
     try:
