@@ -15,10 +15,13 @@ _temp_copy_info = None
 operaciones_pendientes_admin = []
 
 # Variables de configuración del menú
-idioma_menu_ui = None # 'español' o 'inglés'
+idioma_menu_ui = None # 'español' o 'inglés' / 'Spanish' o 'English'
 locale_xml = None # 'es_ES' o 'en_US'
 version_adobe = None # 2018+
 
 # Rutas de archivos
 ruta_backup_xml = None # Ruta del archivo .bak creado por Simi
 ruta_instal_print = None # Ruta de instalación para mostrar al usuario
+
+# Idioma de la interfaz de Simi ('es' o 'en')
+idioma_simi = 'es'
