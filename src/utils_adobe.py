@@ -254,12 +254,16 @@ def chequea_cierra_app(nombre_app: str) -> bool:
         f"{TEXTOS['cambiar_idioma']} {nombre_app} {TEXTOS['al']} {shared_state.idioma_menu_ui}"
     )
 
-    while True:
-        respuesta = muestra_input_usuario(f"{TEXTOS['queres_cerrar']}").upper().strip() or 'S'
+    # Acepta input S/s (español) o Y/y (inglés) como sí, N/n como no
+    respuesta_si = ('S', 'Y')
+    respuesta_no = ('N',)
 
-        if respuesta == 'S':
+    while True:
+        respuesta = muestra_input_usuario(f"{TEXTOS['queres_cerrar']}").upper().strip() or respuesta_si[0]
+
+        if respuesta in respuesta_si:
             break
-        elif respuesta == 'N':
+        elif respuesta in respuesta_no:
             limpia_pantalla()
             borde_superior(f"{TEXTOS['simi_titulo']}", f"v{VERSION_ACTUAL_SIMI}")
             muestra_contenido(
@@ -291,7 +295,7 @@ def chequea_cierra_app(nombre_app: str) -> bool:
     for proc in procesos_coinciden:
         if _ES_MACOS:
             cmd = f"kill -TERM {proc.pid} 2>/dev/null || kill -KILL {proc.pid} 2>/dev/null"
-        else:  # Windows
+        else:
             cmd = f'taskkill /PID {proc.pid} /F'
 
         shared_state.operaciones_pendientes_admin.append({
