@@ -1,5 +1,12 @@
 # Changelog - Simi
 
+## v2.7
+- Solucionado un error que no detectaba la ruta por defecto de Character Animator 2026 en macOS
+- La interfaz de Simi ahora está disponible en inglés y español
+- Nuevo mensaje informativo al cambiar el idioma de Premiere Pro
+- Se cambió el nombre del menú Ayuda
+- Nueva URL para reportar un error
+
 ## v2.6
 - Soporte para las versiones 2026 de los programas de Adobe
 - Ahora las rutas de las carpetas se muestran en español o inglés, según el idioma del sistema operativo
