@@ -19,13 +19,38 @@ from colorama import Fore
 
 # Imports Simi
 from interfaz import titulo_subrayado, limpia_pantalla, borde_superior, muestra_contenido, borde_inferior, muestra_input_usuario
-from i18n import TEXTOS
+from i18n import TEXTOS, _TEXTOS_ES, _TEXTOS_EN
 from config import URLS, VERSION_ACTUAL_SIMI, NOMBRE_RELEASE
 from utils_archivos import get_carpeta_descargas, descargar_archivo
 
 # Constantes
 _SISTEMA_OPERATIVO = platform.system()
 _ES_WINDOWS = _SISTEMA_OPERATIVO == 'Windows'
+_RESPUESTA_SI = ('S', 'Y') # Aceptamos inputs del usuario en inglés y español
+
+def set_idioma(idiom: str) -> None:
+    """
+    Cambia el idioma activo usando el contenido del diccionario TEXTOS en i18n.py
+
+    Args:
+        idiom: 'es' para español, 'en' para inglés
+    """
+    fuente = _TEXTOS_EN if idiom == 'en' else _TEXTOS_ES
+    TEXTOS.update(fuente)
+
+def inicializar_idioma() -> str:
+    """
+    Detecta automáticamente el idioma del SO, lo aplica y devuelve el código de idioma.
+
+    Returns:
+        'es' o 'en'
+    """
+    from traduccion_rutas import _detectar_idioma_sistema # Usamos la detección de traducción_rutas.py
+
+    idiom = 'es' if _detectar_idioma_sistema() else 'en'
+    set_idioma(idiom)
+
+    return idiom
 
 def _mostrar_mensaje(titulo_menu: str, mensaje: str) -> None:
     """
@@ -52,13 +77,11 @@ def _obtener_ultima_version() -> Tuple[bool, Optional[float], Optional[str]]:
         Tuple de (success, version, error_message)
     """
     import requests
-
     try:
         respuesta = requests.get(URLS['latest_vcheck'], timeout=5)
         respuesta.raise_for_status()
         ultima_version = float(respuesta.text.strip())
         return True, ultima_version, None
-
     except requests.RequestException as e:
         return False, None, str(e)
 
@@ -78,7 +101,6 @@ def _construir_info_descarga(ultima_version: float) -> Tuple[str, str, str]:
     else:
         extension = '.dmg'
         texto_os = '_mac'
-
     nombre_archivo = f"{NOMBRE_RELEASE}{ultima_version}{texto_os}{extension}"
     return extension, texto_os, nombre_archivo
 
@@ -98,7 +120,6 @@ def _abrir_archivo_sistema(ruta: str) -> bool:
         else:
             subprocess.run(['open', ruta], check=True)
         return True
-
     except Exception:
         return False
 
@@ -151,7 +172,7 @@ def version_update() -> bool:
     )
 
     seleccion = muestra_input_usuario(f"{TEXTOS['desea_descargar']}").upper().strip() or 'S'
-    if seleccion != 'S':
+    if seleccion not in _RESPUESTA_SI:
         return True
 
     # Descarga nueva versión
@@ -171,7 +192,6 @@ def _descargar_nueva_version(ultima_version: float, titulo_menu_1: str, titulo_m
     """
     try:
         ruta_descarga = get_carpeta_descargas()
-
         # Construye URL de descarga y nombre de archivo
         extension, texto_os, nombre_archivo = _construir_info_descarga(ultima_version)
         url_release = f"{URLS['url_releases']}/v{ultima_version}/{nombre_archivo}"
@@ -198,7 +218,7 @@ def _descargar_nueva_version(ultima_version: float, titulo_menu_1: str, titulo_m
         borde_inferior()
         seleccion_abrir = muestra_input_usuario(f"{TEXTOS['desea_abrir']}").upper().strip() or 'S'
 
-        if seleccion_abrir == 'S' and ruta_real:
+        if seleccion_abrir in _RESPUESTA_SI and ruta_real:
             if _abrir_archivo_sistema(ruta_real):
                 os._exit(0)
 
