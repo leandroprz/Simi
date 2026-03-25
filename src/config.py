@@ -19,7 +19,7 @@ URLS = {
     'latest_vcheck': 'https://github.com/leandroprz/Simi/raw/main/version.txt',
     'url_releases': 'https://github.com/leandroprz/Simi/releases/download',
     'url_ayuda_tienda': 'https://leandroperez.art/tienda/productos-gratuitos/simi-cambia-idioma-adobe-sin-reinstalar/',
-    'url_reportar_error': 'https://github.com/leandroprz/Simi/issues'
+    'url_reportar_error': 'https://github.com/leandroprz/Simi/issues/new'
 }
 
 # Programas de Adobe
