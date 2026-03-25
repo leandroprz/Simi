@@ -262,7 +262,6 @@ Al compilar en macOS, a veces la app aparece en el Dock, luego desaparece, pero 
 - Optimizar la ejecución de la app compilada con PyInstaller, a mi gusto demora mucho en abrir (probé otras alternativas, ninguna entrega un único ejecutable)
 - Las versiones CC 2018 y CC 2019 no funcionan correctamente. En estos casos se debe agregar manualmente la ruta donde se instaló el programa de Adobe (incluso si se instaló en la ruta por defecto que usa Adobe ya que Simi no detecta correctamente esas versiones)
 - Drag and drop no funciona en Windows
-- Traducir interfaz al inglés
 - Seguro me olvido de algo
 
 ---
