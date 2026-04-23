@@ -1,5 +1,8 @@
 # Changelog - Simi
 
+## v2.8
+- Solucionado un error relacionado a las rutas por defecto en las versiones 2018 y 2019 en todos los programas (Windows y macOS)
+
 ## v2.7
 - Solucionado un error que no detectaba la ruta por defecto de Character Animator 2026 en macOS
 - La interfaz de Simi ahora está disponible en inglés y español
