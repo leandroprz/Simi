@@ -9,7 +9,7 @@ Este proyecto está bajo la Licencia GPLv2 - ver LICENSE para más detalles
 """
 
 # Constantes Simi
-VERSION_ACTUAL_SIMI = "2.7"
+VERSION_ACTUAL_SIMI = "2.8"
 NOMBRE_RELEASE = "Simi_v"
 
 # URLs locales, releases, etc
@@ -181,10 +181,15 @@ VERSIONES_ADOBE_MACOS = {
 
 # Rutas de instalación por defecto en macOS
 RUTAS_ADOBE_MACOS = {
-    # Programas con ruta default en "/Library/Application Support" (usan la versión en el nombre de la carpeta donde está el XML)
+    # Programas con ruta default en "/Library/Application Support" (usan el número de versión en el nombre de la carpeta donde está el XML)
+    # cc_versions: versiones que usan "Adobe <nombre> CC <year>" en lugar del número de versión en el nombre de la carpeta
+    # override_paths: rutas completas por defecto para versiones con un formato completamente distinto según el año
     'after_effects': {
         'ruta_default': '/Library/Application Support/Adobe/After Effects',
-        'usa_version': True
+        'usa_version': True,
+        'override_paths': {
+            2018: '/Library/Application Support/Adobe/Adobe After Effects CC 2018'
+        }
     },
     'audition': {
         'ruta_default': '/Library/Application Support/Adobe/Audition',
@@ -196,33 +201,45 @@ RUTAS_ADOBE_MACOS = {
     },
     'media_encoder': {
         'ruta_default': '/Library/Application Support/Adobe/Media Encoder',
-        'usa_version': True
+        'usa_version': True,
+        'override_paths': {
+            2018: '/Library/Application Support/Adobe/AdobeMediaEncoder/12.0'
+        }
     },
     'premiere_pro': {
         'ruta_default': '/Library/Application Support/Adobe/Premiere Pro',
-        'usa_version': True
+        'usa_version': True,
+        'override_paths': {
+            2018: '/Library/Application Support/Adobe/PremierePro/12.0'
+        }
     },
 
     # Programas con ruta default en "/Applications" (usan el año en el nombre de la carpeta)
+    # cc_versions: versiones que incluyen "CC" en el nombre de la carpeta
     'animate': {
         'ruta_default': '/Applications/Adobe Animate',
-        'usa_version': False
+        'usa_version': False,
+        'cc_versions': [2018, 2019]
     },
     'illustrator': {
         'ruta_default': '/Applications/Adobe Illustrator',
-        'usa_version': False
+        'usa_version': False,
+        'cc_versions': [2018, 2019]
     },
     'incopy': {
         'ruta_default': '/Applications/Adobe InCopy',
-        'usa_version': False
+        'usa_version': False,
+        'cc_versions': [2018, 2019]
     },
     'indesign': {
         'ruta_default': '/Applications/Adobe InDesign',
-        'usa_version': False
+        'usa_version': False,
+        'cc_versions': [2018, 2019]
     },
     'photoshop': {
         'ruta_default': '/Applications/Adobe Photoshop',
-        'usa_version': False
+        'usa_version': False,
+        'cc_versions': [2018, 2019]
     }
 }
 
