@@ -60,17 +60,32 @@ def rutas_adobe_macos(nombre_programa: str, version_adobe: int) -> Optional[str]
     Returns:
         Ruta como string o None si no se encontró
     """
-    versiones_dict = versiones_adobe_macos(version_adobe)
-    if not versiones_dict or nombre_programa not in RUTAS_ADOBE_MACOS:
+    if nombre_programa not in RUTAS_ADOBE_MACOS:
         return None
 
     info = RUTAS_ADOBE_MACOS[nombre_programa]
     ruta_base = info['ruta_default']
 
-    if info['usa_version'] and nombre_programa in versiones_dict:
-        return f"{ruta_base}/{versiones_dict[nombre_programa]}"
-    else:
-        return f"{ruta_base} {version_adobe}"
+    # 1. Ruta anulada (ej: Media Encoder 2018, Premiere Pro 2018)
+    override_paths = info.get('override_paths', {})
+    if version_adobe in override_paths:
+        return override_paths[version_adobe]
+
+    # 2. Ruta con "CC" (ej: After Animate CC 2018)
+    cc_versions = info.get('cc_versions', [])
+    if version_adobe in cc_versions:
+        nombre = ruta_base.rsplit('/', 1)[-1]
+        carpeta = ruta_base.rsplit('/', 1)[0]
+        return f"{carpeta}/{nombre} CC {version_adobe}"
+
+    # 3. Ruta con número de versión (ej: After Effects/17.0)
+    if info['usa_version']:
+        versiones_dict = versiones_adobe_macos(version_adobe)
+        if versiones_dict and nombre_programa in versiones_dict:
+            return f"{ruta_base}/{versiones_dict[nombre_programa]}"
+
+    # 4. Fallback: ruta con año (ej: Adobe Photoshop 2024+)
+    return f"{ruta_base} {version_adobe}"
 
 def get_version_macos(version_adobe: int, nombre_programa: str) -> Optional[str]:
     """
@@ -102,13 +117,18 @@ def ruta_instalacion_programa(ruta_subcarpeta: Optional[str] = None,
     """
     if _ES_WINDOWS or not nombre_programa or version_adobe is None:
         ruta_base = f"{_PROGRAMW6432}\\Adobe"
+        if ruta_subcarpeta and version_adobe in (2018, 2019):
+            # Agrega "CC" antes del año para aplicaciones legacy en Windows
+            ruta_subcarpeta = ruta_subcarpeta.replace(
+                f" {version_adobe}", f" CC {version_adobe}"
+            )
         ruta_instalacion_default = os.path.join(ruta_base, ruta_subcarpeta) if ruta_subcarpeta else ruta_base
     else: # macOS
         rutas_default = rutas_adobe_macos(nombre_programa, version_adobe)
 
         if rutas_default is None:
             # Fallback si no se encuentra en RUTAS_ADOBE_MACOS
-            ruta_base = "/Applications/Adobe"
+            ruta_base = "/Applications"
             ruta_instalacion_default = os.path.join(ruta_base, ruta_subcarpeta) if ruta_subcarpeta else ruta_base
         else:
             ruta_instalacion_default = rutas_default
@@ -254,7 +274,7 @@ def chequea_cierra_app(nombre_app: str) -> bool:
         f"{TEXTOS['cambiar_idioma']} {nombre_app} {TEXTOS['al']} {shared_state.idioma_menu_ui}"
     )
 
-    # Acepta input S/s (español) o Y/y (inglés) como sí, N/n como no
+    # Acepta input S/s (español) o Y/y (inglés) para sí, N/n para no
     respuesta_si = ('S', 'Y')
     respuesta_no = ('N',)
 
