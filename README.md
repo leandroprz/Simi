@@ -4,7 +4,7 @@
     <a href=".github\simi-win-1.jpg" target="_blank"><img src=".github\simi-win-1.jpg" width="45%"></img></a> <a href=".github\simi-mac-1.png" target="_blank"><img src=".github\simi-mac-1.png" width="45%"></img></a>
 </p>
 
-[![Última versión](https://img.shields.io/github/v/release/leandroprz/Simi?color=998f68&label=Última%20Versión&style=for-the-badge)](https://github.com/leandroprz/Simi/releases/latest) ![Plataforma](https://img.shields.io/badge/Plataforma-Windows%20&amp;%20macOS-787878?style=for-the-badge) ![Python](https://img.shields.io/badge/Python-v3.8+-687d99?style=for-the-badge) ![Licencia](https://img.shields.io/badge/Licencia-GPL%20v2-628a6f?style=for-the-badge)
+[![Última versión](https://img.shields.io/github/v/release/leandroprz/Simi?color=998f68&label=Última%20Versión&style=for-the-badge)](https://github.com/leandroprz/Simi/releases/latest) [![Plataforma](https://img.shields.io/badge/Plataforma-Windows%20&amp;%20macOS-6f628a?style=for-the-badge)](#) [![Language](https://img.shields.io/badge/Language-English%20&amp;%20Spanish-8a6f62?style=for-the-badge)](\README-en.md) [![Python](https://img.shields.io/badge/Python-v3.8+-687d99?style=for-the-badge)](#) [![Licencia](https://img.shields.io/badge/Licencia-GPL%20v2-628a6f?style=for-the-badge)](/LICENSE)
 
 ## ¿Qué es Simi?
 Esta herramienta nace a partir de la necesidad de cambiar rápidamente los idiomas de los diferentes programas de Adobe sin tener que reinstalarlos. Hace un tiempo hice [un tutorial donde expliqué](https://leandroperez.art/blog/cambia-el-idioma-de-los-programas-de-adobe-sin-reinstalarlos/) cómo cambiar los idiomas editando unos archivos de texto, pero era un poco engorroso y sobre todo molesto si son como yo, que necesitan cambiar constantemente el idioma de inglés a español o viceversa.
@@ -259,8 +259,7 @@ Al compilar en macOS, a veces la app aparece en el Dock, luego desaparece, pero 
 ---
 
 ## ToDo y known issues
-- Optimizar la ejecución de la app compilada con PyInstaller, a mi gusto demora mucho en abrir (probé otras alternativas, ninguna entrega un único ejecutable)
-- Las versiones CC 2018 y CC 2019 no funcionan correctamente. En estos casos se debe agregar manualmente la ruta donde se instaló el programa de Adobe (incluso si se instaló en la ruta por defecto que usa Adobe ya que Simi no detecta correctamente esas versiones)
+- Optimizar la ejecución de la app compilada con PyInstaller. A mi gusto demora mucho en abrir (probé otras alternativas, ninguna entrega un único ejecutable)
 - Drag and drop no funciona en Windows
 - Seguro me olvido de algo
 
