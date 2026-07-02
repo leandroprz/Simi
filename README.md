@@ -4,7 +4,7 @@
     <a href=".github\simi-win-1.jpg" target="_blank"><img src=".github\simi-win-1.jpg" width="45%"></img></a> <a href=".github\simi-mac-1.png" target="_blank"><img src=".github\simi-mac-1.png" width="45%"></img></a>
 </p>
 
-[![Última versión](https://img.shields.io/github/v/release/leandroprz/Simi?color=998f68&label=Última%20Versión&style=for-the-badge)](https://github.com/leandroprz/Simi/releases/latest) [![Plataforma](https://img.shields.io/badge/Plataforma-Windows%20&amp;%20macOS-6f628a?style=for-the-badge)](#) [![Language](https://img.shields.io/badge/Language-English%20&amp;%20Spanish-8a6f62?style=for-the-badge)](/README-en.md) [![Python](https://img.shields.io/badge/Python-v3.8+-687d99?style=for-the-badge)](#) [![Licencia](https://img.shields.io/badge/Licencia-GPL%20v2-628a6f?style=for-the-badge)](/LICENSE) ![Descargas](https://img.shields.io/github/downloads/leandroprz/simi/total?style=for-the-badge&label=Descargas&color=ce7b40)
+[![Última versión](https://img.shields.io/github/v/release/leandroprz/Simi?color=998f68&label=Última%20Versión&style=for-the-badge)](https://github.com/leandroprz/Simi/releases/latest) [![Plataforma](https://img.shields.io/badge/Plataforma-Windows%20&amp;%20macOS-6f628a?style=for-the-badge)](#) [![Language](https://img.shields.io/badge/Language-English%20&amp;%20Spanish-8a6f62?style=for-the-badge)](/README-en.md) [![Python](https://img.shields.io/badge/Python-v3.8+-687d99?style=for-the-badge)](#) [![Licencia](https://img.shields.io/badge/Licencia-GPL%20v2-628a6f?style=for-the-badge)](/LICENSE) ![Descargas](https://img.shields.io/github/downloads/leandroprz/simi/total?style=for-the-badge&label=Descargas&color=cc8959)
 
 
 ## ¿Qué es Simi?
