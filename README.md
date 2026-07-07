@@ -31,7 +31,7 @@ Esta herramienta nace a partir de la necesidad de cambiar rápidamente los idiom
 
 ## Compatibilidad
 - Windows 10+ (x64)
-- macOS 10.13+ (sólo lo probé en Intel, pero debería funcionar en ARM)
+- macOS 10.13+ (sólo lo probé en Intel, pero debería funcionar en Apple Silicon)
 
 ---
 
