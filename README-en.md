@@ -30,7 +30,7 @@ This tool was born out of the need to quickly switch the language of different A
 
 ## Compatibility
 - Windows 10+ (x64)
-- macOS 10.13+ (only tested on Intel, but should work on ARM)
+- macOS 10.13+ (only tested on Intel, but should work on Apple Silicon)
 
 ---
 
