@@ -69,7 +69,19 @@ def _mostrar_mensaje(titulo_menu: str, mensaje: str) -> None:
     )
     borde_inferior()
 
-def _obtener_ultima_version() -> Tuple[bool, Optional[float], Optional[str]]:
+def _parse_version(version_str: str) -> Tuple[int, ...]:
+    """
+    Convierte un string en una tupla de enteros para comparar correctamente
+
+    Args:
+        version_str: Versión como string (ej: '2.9', '2.9.1')
+
+    Returns:
+        Tupla de enteros para comparar versiones
+    """
+    return tuple(int(p) for p in version_str.strip().split('.'))
+
+def _obtener_ultima_version() -> Tuple[bool, Optional[str], Optional[str]]:
     """
     Helper para obtener la última versión disponible de Simi
 
@@ -80,12 +92,13 @@ def _obtener_ultima_version() -> Tuple[bool, Optional[float], Optional[str]]:
     try:
         respuesta = requests.get(URLS['latest_vcheck'], timeout=5)
         respuesta.raise_for_status()
-        ultima_version = float(respuesta.text.strip())
+        ultima_version = respuesta.text.strip()
+        _parse_version(ultima_version)
         return True, ultima_version, None
-    except requests.RequestException as e:
+    except (requests.RequestException, ValueError) as e:
         return False, None, str(e)
 
-def _construir_info_descarga(ultima_version: float) -> Tuple[str, str, str]:
+def _construir_info_descarga(ultima_version: str) -> Tuple[str, str, str]:
     """
     Helper para construir información de descarga según el sistema operativo
 
@@ -144,10 +157,11 @@ def version_update() -> bool:
         muestra_input_usuario(f"{TEXTOS['input_menu_anterior']}").strip()
         return False
 
-    version_actual = float(VERSION_ACTUAL_SIMI)
+    version_actual = _parse_version(VERSION_ACTUAL_SIMI)
+    version_remota = _parse_version(ultima_version)
 
     # Está usando la última versión
-    if ultima_version == version_actual:
+    if version_remota == version_actual:
         _mostrar_mensaje(
             titulo_menu_1,
             f"{Fore.LIGHTCYAN_EX}{TEXTOS['usando_ultima_version']} v{VERSION_ACTUAL_SIMI}\n"
@@ -156,7 +170,7 @@ def version_update() -> bool:
         return True
 
     # Está usando versión superior a la disponible públicamente
-    if ultima_version < version_actual:
+    if version_remota < version_actual:
         _mostrar_mensaje(
             titulo_menu_1,
             f"{Fore.LIGHTCYAN_EX}{TEXTOS['version_actual_1']} ({VERSION_ACTUAL_SIMI}) "
@@ -178,7 +192,7 @@ def version_update() -> bool:
     # Descarga nueva versión
     return _descargar_nueva_version(ultima_version, titulo_menu_1, titulo_menu_2)
 
-def _descargar_nueva_version(ultima_version: float, titulo_menu_1: str, titulo_menu_2: str) -> bool:
+def _descargar_nueva_version(ultima_version: str, titulo_menu_1: str, titulo_menu_2: str) -> bool:
     """
     Helper para descargar una nueva versión de Simi
 
