@@ -522,7 +522,7 @@ def _descomprime_zip_macos_directo(carpeta_temp: str, ruta_unzip: str, ruta_zip:
     return True
 
 def descargar_archivo(url: str, auto_unzip: bool = False, ruta_unzip: Optional[str] = None,
-                     ruta_destino: Optional[str] = None, ultima_version: Optional[float] = None) -> Tuple[bool, Optional[str]]:
+                     ruta_destino: Optional[str] = None, ultima_version: Optional[str] = None) -> Tuple[bool, Optional[str]]:
     """
     Descarga un archivo, muestra una barra de progreso y el tamaño del archivo
 
@@ -567,7 +567,7 @@ def descargar_archivo(url: str, auto_unzip: bool = False, ruta_unzip: Optional[s
         muestra_contenido(f"{Fore.LIGHTRED_EX}{TEXTOS['error_inesperado']} {e}\n")
         return False, None
 
-def _construir_ruta_descarga(url: str, carpeta_simi: str, ultima_version: Optional[float]) -> Tuple[str, str]:
+def _construir_ruta_descarga(url: str, carpeta_simi: str, ultima_version: Optional[str]) -> Tuple[str, str]:
     """ Helper para construir ruta de descarga desde URL """
     parsed_url = urlparse(url)
     ruta_url = parsed_url.path
