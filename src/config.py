@@ -9,7 +9,7 @@ Este proyecto está bajo la Licencia GPLv2 - ver LICENSE para más detalles
 """
 
 # Constantes Simi
-VERSION_ACTUAL_SIMI = "2.8"
+VERSION_ACTUAL_SIMI = "2.9"
 NOMBRE_RELEASE = "Simi_v"
 
 # URLs locales, releases, etc
@@ -19,7 +19,7 @@ URLS = {
     'latest_vcheck': 'https://github.com/leandroprz/Simi/raw/main/version.txt',
     'url_releases': 'https://github.com/leandroprz/Simi/releases/download',
     'url_ayuda_tienda': 'https://leandroperez.art/tienda/productos-gratuitos/simi-cambia-idioma-adobe-sin-reinstalar/',
-    'url_reportar_error': 'https://github.com/leandroprz/Simi/issues/new'
+    'url_reportar_error': 'https://github.com/leandroprz/Simi/issues'
 }
 
 # Programas de Adobe
