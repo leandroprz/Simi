@@ -1,7 +1,7 @@
 # Simi - Change the language of Adobe apps without reinstalling them
 
 <p align="center">
-    <a href=".github\simi-win-1.jpg" target="_blank"><img src=".github\simi-win-1.jpg" width="45%"></img></a> <a href=".github\simi-mac-1.png" target="_blank"><img src=".github\simi-mac-1.png" width="45%"></img></a>
+    <a href=".github\simi-win-en.webp" target="_blank" title="Simi in English on Windows"><img src=".github\simi-win-en.webp" width="46.4%" alt="Simi in English on Windows"></img></a> <a href=".github\simi-mac-en.webp" target="_blank" title="Simi in English on macOS"><img src=".github\simi-mac-en.webp" width="48%" alt="Simi in English on macOS"></img></a>
 </p>
 
 [![Latest version](https://img.shields.io/github/v/release/leandroprz/Simi?color=998f68&label=Latest%20Version&style=for-the-badge)](https://github.com/leandroprz/Simi/releases/latest) [![Platform](https://img.shields.io/badge/Platform-Windows%20&amp;%20macOS-6f628a?style=for-the-badge)](#) [![Idioma](https://img.shields.io/badge/Idioma-Español%20e%20Inglés-8a6f62?style=for-the-badge)](/README.md) [![Python](https://img.shields.io/badge/Python-v3.8+-687d99?style=for-the-badge)](#) [![License](https://img.shields.io/badge/License-GPL%20v2-628a6f?style=for-the-badge)](/LICENSE) [![Downloads](https://img.shields.io/github/downloads/leandroprz/simi/total?style=for-the-badge&label=Downloads&color=cc8959)](#)
@@ -79,6 +79,7 @@ simi/
 │   ├── dmg_background.png
 │   ├── dmg_icon.icns
 │   ├── icono_mac.icns
+│   ├── icono_glass.icns
 │   └── icono_win.ico
 ├── Simi.bat                   # Windows launcher
 ├── Simi.command               # macOS launcher
