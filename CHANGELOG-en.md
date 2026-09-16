@@ -1,5 +1,10 @@
 # Changelog - Simi
 
+## v2.9
+- New icon compatible with macOS 26+ and Liquid Glass
+- New URL to report an error
+- Fixed a bug in the app's version checker function
+
 ## v2.8
 - Fixed a bug that did no properly detect the default paths for version 2018 and 2019 for all programs (Windows and macOS)
 
