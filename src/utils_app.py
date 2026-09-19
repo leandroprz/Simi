@@ -52,22 +52,28 @@ def inicializar_idioma() -> str:
 
     return idiom
 
-def _mostrar_mensaje(titulo_menu: str, mensaje: str) -> None:
+def _mostrar_mensaje(titulo_menu: str, mensaje: str, incluye_borde_inferior: bool = True) -> None:
     """
     Helper para mostrar mensajes con formato e interfaz consistentes
 
     Args:
         titulo_menu: Título del menú
         mensaje: Mensaje a mostrar
+        incluye_borde_inferior: Si dibuja el borde inferior (False si se va a agregar más contenido después, ej: antes de una descarga)
     """
     limpia_pantalla()
     borde_superior(f"{TEXTOS['simi_titulo']}", f"v{VERSION_ACTUAL_SIMI}")
+
+    # Si no hay mensaje (ej: pantalla de descarga), evita una línea en blanco extra sin contenido después
+    espaciado_final = "\n\n" if mensaje else "\n"
+
     muestra_contenido(
         f"\n{TEXTOS['simi_descripcion']}\n\n"
-        f"\n{titulo_menu}\n\n"
+        f"\n{titulo_menu}{espaciado_final}"
         f"{mensaje}"
     )
-    borde_inferior()
+    if incluye_borde_inferior:
+        borde_inferior()
 
 def _parse_version(version_str: str) -> Tuple[int, ...]:
     """
@@ -212,7 +218,7 @@ def _descargar_nueva_version(ultima_version: str, titulo_menu_1: str, titulo_men
         ruta_archivo = os.path.join(ruta_descarga, "Simi", "versiones", nombre_archivo)
 
         # Muestra pantalla de descarga
-        _mostrar_mensaje(titulo_menu_2, "")
+        _mostrar_mensaje(titulo_menu_2, "", incluye_borde_inferior=False)
 
         # Descarga
         descarga_exitosa, ruta_real = descargar_archivo(
