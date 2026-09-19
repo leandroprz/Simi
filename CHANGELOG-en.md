@@ -1,5 +1,9 @@
 # Changelog - Simi
 
+## v2.9.1
+- Fixed a cosmetic issue in the app's new version downloader screen
+- Fixed an issue that was attaching unnecessary assets to the Windows and macOS binaries
+
 ## v2.9
 - New icon compatible with macOS 26+ and Liquid Glass
 - New URL to report an error
