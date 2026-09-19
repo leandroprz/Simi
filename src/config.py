@@ -9,7 +9,7 @@ Este proyecto está bajo la Licencia GPLv2 - ver LICENSE para más detalles
 """
 
 # Constantes Simi
-VERSION_ACTUAL_SIMI = "2.9"
+VERSION_ACTUAL_SIMI = "2.9.1"
 NOMBRE_RELEASE = "Simi_v"
 
 # URLs locales, releases, etc
