@@ -49,7 +49,7 @@ class BarraProgreso:
         self.tiempo_actualizacion = tiempo_actualizacion
         self.item_actual = ""
 
-        # Config para cada modo - OPTIMIZADO: dict lookup es más rápido que if/elif
+        # Config para cada modo
         self.config_modo = {
             'descarga': {
                 'unidad': 'B',
