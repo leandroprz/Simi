@@ -8,6 +8,7 @@ Copyright (C) 2025 Leandro Pérez
 Este proyecto está bajo la Licencia GPLv2 - ver LICENSE para más detalles
 """
 
+import os
 import platform
 from pathlib import Path
 from colorama import Fore
@@ -18,7 +19,8 @@ from config import VERSION_ACTUAL_SIMI, URLS, CONFIG_PROGRAMAS_ADOBE
 from i18n import TEXTOS
 from interfaz import limpia_pantalla, borde_superior, borde_inferior, muestra_contenido, muestra_input_usuario, titulo_subrayado
 from utils_adobe import ruta_instalacion_programa, chequea_cierra_app
-from utils_archivos import descargar_archivo, edita_idioma_xml, restaura_idioma_xml
+from utils_archivos import descargar_archivo, edita_idioma_xml, restaura_idioma_xml, get_carpeta_descargas
+from utils_adobe_cdn import descarga_desde_adobe
 from permisos_admin import ejecutar_operaciones_pendientes
 
 def cambiar_idioma_programa(programa_key):
@@ -31,7 +33,7 @@ def cambiar_idioma_programa(programa_key):
     Returns:
         bool: True si el cambio fue exitoso, False si hubo error
     """
-    # Validación
+
     if programa_key not in CONFIG_PROGRAMAS_ADOBE:
         raise ValueError(f"El programa {programa_key} no está cargado en la configuración de Simi.")
 
@@ -40,8 +42,8 @@ def cambiar_idioma_programa(programa_key):
     version_adobe = shared_state.version_adobe
     idioma_menu_ui = shared_state.idioma_menu_ui
 
-    # Nos aseguramos que locale_xml no sea None (definido en shared_state.py)
-    if locale_xml is None:
+    # Nos aseguramos que locale_xml y version_adobe no sean None (definidos en shared_state.py)
+    if locale_xml is None or version_adobe is None:
         muestra_contenido(f"{Fore.LIGHTRED_EX}{TEXTOS['no_cambio']}\n")
         borde_inferior()
         muestra_input_usuario(f"{TEXTOS['input_menu_anterior']}").strip()
@@ -120,10 +122,19 @@ def cambiar_idioma_programa(programa_key):
         url_key = 'url_locales_win' if platform.system() == 'Windows' else 'url_locales_mac'
         url_locale = f"{URLS[url_key]}/{locale_code}/{version_adobe}/{locale_xml}.zip"
 
+        # Intenta obtener el paquete desde los servidores de Adobe, si falla, intenta con GitHub
+        carpeta_os = 'win' if platform.system() == 'Windows' else 'mac'
+        ruta_cache_locale = os.path.join(
+            get_carpeta_descargas(), "Simi", "idiomas", carpeta_os, locale_code, str(version_adobe), f"{locale_xml}.zip"
+        )
+        if not os.path.exists(ruta_cache_locale):
+            muestra_contenido(f"{TEXTOS['buscando_paquete_idioma']}\n")
+            descarga_desde_adobe(programa_key, version_adobe, locale_xml, Path(ruta_cache_locale))
+
         descarga_exitosa = descargar_archivo(
             url_locale,
             auto_unzip=True,
-            ruta_unzip=str(ruta_instal_programa_base) # Convierte path a string
+            ruta_unzip=str(ruta_instal_programa_base)
         )
 
         if not descarga_exitosa:
@@ -134,7 +145,6 @@ def cambiar_idioma_programa(programa_key):
 
     # Edita el XML si no es solo locale
     if not config.get('solo_locale', False):
-        # Nos aseguramos que ruta_xml no sea None
         if ruta_xml is None:
             muestra_contenido(f"{Fore.LIGHTRED_EX}{TEXTOS['no_cambio']}\n")
             borde_inferior()
@@ -186,7 +196,6 @@ def restaurar_xml_programa(programa_key):
     Returns:
         bool: True si la restauración fue exitosa, False si hubo error
     """
-    # Validación
     if programa_key not in CONFIG_PROGRAMAS_ADOBE:
         raise ValueError(f"El programa {programa_key} no está cargado en la configuración de Simi.")
 
