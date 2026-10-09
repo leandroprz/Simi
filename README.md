@@ -4,7 +4,7 @@
     <a href=".github\simi-win-es.webp" target="_blank" title="Simi en español en Windows"><img src=".github\simi-win-es.webp" width="46.4%" alt="Simi en español en Windows"></img></a> <a href=".github\simi-mac-es.webp" target="_blank" title="Simi en español en macOS"><img src=".github\simi-mac-es.webp" width="48%" alt="Simi en español en macOS"></img></a>
 </p>
 
-[![Última versión](https://img.shields.io/github/v/release/leandroprz/Simi?color=998f68&label=Última%20Versión&style=for-the-badge)](https://github.com/leandroprz/Simi/releases/latest) [![Plataforma](https://img.shields.io/badge/Plataforma-Windows%20&amp;%20macOS-6f628a?style=for-the-badge)](#) [![Language](https://img.shields.io/badge/Language-English%20&amp;%20Spanish-8a6f62?style=for-the-badge)](/README-en.md) [![Python](https://img.shields.io/badge/Python-v3.8+-687d99?style=for-the-badge)](#) [![Licencia](https://img.shields.io/badge/Licencia-GPL%20v2-628a6f?style=for-the-badge)](/LICENSE) [![Descargas](https://img.shields.io/github/downloads/leandroprz/simi/total?style=for-the-badge&label=Descargas&color=cc8959)](#)
+[![Última versión](https://img.shields.io/github/v/release/leandroprz/Simi?color=998f68&label=Última%20Versión&style=for-the-badge)](https://github.com/leandroprz/Simi/releases/latest) [![Plataforma](https://img.shields.io/badge/Plataforma-Windows%20&amp;%20macOS-6f628a?style=for-the-badge)](#) [![Language](https://img.shields.io/badge/Language-English%20&amp;%20Spanish-8a6f62?style=for-the-badge)](/README-en.md) [![Python](https://img.shields.io/badge/Python-v3.11+-687d99?style=for-the-badge)](#) [![Licencia](https://img.shields.io/badge/Licencia-GPL%20v2-628a6f?style=for-the-badge)](/LICENSE) [![Descargas](https://img.shields.io/github/downloads/leandroprz/simi/total?style=for-the-badge&label=Descargas&color=cc8959)](#)
 
 ## ¿Qué es Simi?
 Esta herramienta nace a partir de la necesidad de cambiar rápidamente los idiomas de los diferentes programas de Adobe sin tener que reinstalarlos. Hace un tiempo hice [un tutorial donde expliqué](https://leandroperez.art/blog/cambia-el-idioma-de-los-programas-de-adobe-sin-reinstalarlos/) cómo cambiar los idiomas editando unos archivos de texto, pero era un poco engorroso y sobre todo molesto si son como yo, que necesitan cambiar constantemente el idioma de inglés a español o viceversa.
@@ -71,6 +71,7 @@ simi/
 │   ├── shared_state.py        # Estado compartido entre módulos
 │   ├── simi.py                # Muestra la GUI con styling y todas las funcionalidades
 │   ├── traduccion_rutas.py    # Traducción de rutas
+│   ├── utils_adobe_cdn.py     # Obtiene paquetes de idioma desde el servidor de Adobe
 │   ├── utils_adobe.py         # Utilidades de programas de Adobe
 │   ├── utils_app.py           # Utilidades de la app Simi
 │   └── utils_archivos.py      # Manejo de archivos
@@ -91,7 +92,7 @@ simi/
 ## Para desarrolladores
 
 ### Requisitos
-- Python 3.8+
+- Python 3.11+
 - pip
 - ~50MB de espacio para las dependencias
 
@@ -154,7 +155,7 @@ a = Analysis(
         ('assets/icono_win.ico', 'assets'),
     ],
     hiddenimports=[
-        'config', 'main', 'i18n', 'idiomas_adobe', 'interfaz', 'permisos_admin', 'resource_helper', 'shared_state', 'simi', 'traduccion_rutas', 'utils_adobe', 'utils_app', 'utils_archivos', 'platform', 'os', 'sys', 'psutil', 'webbrowser', 'requests', 'subprocess', 'shutil', 'zipfile', 'ctypes', 'xml.etree.ElementTree', 'colorama', 'textwrap', 'pathlib', 'typing', 'urllib.parse', 're', 'runpy', 'time', 'tkinter', 'threading', 'queue', 'plistlib', 'uuid', 'tempfile', 'tkinterdnd2'
+        'config', 'main', 'i18n', 'idiomas_adobe', 'interfaz', 'permisos_admin', 'resource_helper', 'shared_state', 'simi', 'traduccion_rutas', 'utils_adobe', 'utils_app', 'utils_archivos', 'utils_adobe_cdn', 'platform', 'os', 'sys', 'psutil', 'webbrowser', 'requests', 'subprocess', 'shutil', 'zipfile', 'ctypes', 'xml.etree.ElementTree', 'colorama', 'textwrap', 'pathlib', 'typing', 'urllib.parse', 're', 'runpy', 'time', 'tkinter', 'threading', 'queue', 'plistlib', 'uuid', 'tempfile', 'tkinterdnd2'
     ],
     hookspath=[],
     hooksconfig={},
@@ -204,7 +205,7 @@ a = Analysis(
         ('src', 'src'),
     ],
     hiddenimports=[
-        'config', 'main', 'i18n', 'idiomas_adobe', 'interfaz', 'permisos_admin', 'resource_helper', 'shared_state', 'simi', 'traduccion_rutas', 'utils_adobe', 'utils_app', 'utils_archivos', 'platform', 'os', 'sys', 'psutil', 'webbrowser', 'requests', 'subprocess', 'shutil', 'zipfile', 'ctypes', 'xml.etree.ElementTree', 'colorama', 'textwrap', 'pathlib', 'typing', 'urllib.parse', 're', 'runpy', 'time', 'tkinter', 'threading', 'queue', 'plistlib', 'uuid', 'tempfile', 'tkinterdnd2'
+        'config', 'main', 'i18n', 'idiomas_adobe', 'interfaz', 'permisos_admin', 'resource_helper', 'shared_state', 'simi', 'traduccion_rutas', 'utils_adobe', 'utils_app', 'utils_archivos', 'utils_adobe_cdn', 'platform', 'os', 'sys', 'psutil', 'webbrowser', 'requests', 'subprocess', 'shutil', 'zipfile', 'ctypes', 'xml.etree.ElementTree', 'colorama', 'textwrap', 'pathlib', 'typing', 'urllib.parse', 're', 'runpy', 'time', 'tkinter', 'threading', 'queue', 'plistlib', 'uuid', 'tempfile', 'tkinterdnd2'
     ],
     hookspath=[],
     hooksconfig={},
