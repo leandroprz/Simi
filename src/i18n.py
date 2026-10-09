@@ -97,6 +97,7 @@ _TEXTOS_ES = {
     # Conectividad y descarga
     'archivo_existente': 'Se usará el archivo que se descargó previamente en la ruta:',
     'descargando': 'Descargando archivo...',
+    'buscando_paquete_idioma': 'Buscando paquete de idioma...',
     'descarga_a_medias_1': 'Hubo un problema con la descarga.',
     'descarga_a_medias_2': 'Se descargaron',
     'descarga_a_medias_3': 'pero deberían haberse descargado',
@@ -227,6 +228,7 @@ _TEXTOS_EN = {
     # Connectivity and download
     'archivo_existente': 'Using the previously downloaded file at the path:',
     'descargando': 'Downloading file...',
+    'buscando_paquete_idioma': 'Searching language package...',
     'descarga_a_medias_1': 'There was a problem with the download.',
     'descarga_a_medias_2': 'Downloaded',
     'descarga_a_medias_3': 'but should have downloaded',
