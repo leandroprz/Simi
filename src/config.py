@@ -9,7 +9,7 @@ Este proyecto está bajo la Licencia GPLv2 - ver LICENSE para más detalles
 """
 
 # Constantes Simi
-VERSION_ACTUAL_SIMI = "2.9.1"
+VERSION_ACTUAL_SIMI = "3.0"
 NOMBRE_RELEASE = "Simi_v"
 
 # URLs locales, releases, etc
@@ -58,8 +58,11 @@ CONFIG_PROGRAMAS_ADOBE = {
             'Windows': 'AMT/application.xml',
             'Darwin': 'Resources/AMT/ID/AMT/application.xml'
         },
-        'necesita_locale': True, # Sí descarga zip
-        'locale_code': 'ind' # Parte de la URL de descarga
+        'necesita_locale': True,
+        'locale_code': 'ind', # Parte de la URL de descarga
+        'sap_adobe': 'IDSN', # Código SAP de Adobe
+        'cdn_descarta': ['*', 'INSTALLDIR'], # Descarta carpetas - Ver utils_adobe_cdn.py
+        'cdn_anio_a_major': {2018: 13, 2019: 14, 2020: 15, 2021: 16, 2022: 17, 2023: 18, 2024: 19, 2025: 20, 2026: 21}
     },
     'media_encoder': {
         'nombre': 'Media Encoder',
@@ -76,7 +79,11 @@ CONFIG_PROGRAMAS_ADOBE = {
         'xml_paths': {}, # No modifica XML
         'necesita_locale': True,
         'locale_code': 'ps',
-        'solo_locale': True # Solo descarga locale, no modifica XML
+        'solo_locale': True, # Solo descarga locale, no modifica XML
+        'sap_adobe': 'PHSP',
+        'cdn_descarta': [], # En Windows no hay nada que descartar
+        'cdn_descarta_darwin': ['Application'], # En macOS hay una carpeta "Application" extra antes de "Locales"
+        'cdn_anio_a_major': {2018: 19, 2019: 20, 2020: 21, 2021: 22, 2022: 23, 2023: 24, 2024: 25, 2025: 26, 2026: 27}
     },
     'animate': {
         'nombre': 'Animate',
@@ -86,7 +93,10 @@ CONFIG_PROGRAMAS_ADOBE = {
             'Darwin': 'App/Contents/Resources/AMT/application.xml'
         },
         'necesita_locale': True,
-        'locale_code': 'ani'
+        'locale_code': 'ani',
+        'sap_adobe': 'FLPR',
+        'cdn_descarta': ['{locale}', 'AppFiles'], # {locale} se reemplaza por el código de idioma (es_ES, en_US)
+        'cdn_anio_a_major': {2018: 18, 2019: 19, 2020: 20, 2021: 21, 2022: 22, 2023: 23, 2024: 24} # Sin 2025/2026
     },
     'illustrator': {
         'nombre': 'Illustrator',
@@ -96,7 +106,10 @@ CONFIG_PROGRAMAS_ADOBE = {
             'Darwin': 'Support Files/AMT/AI/AMT/application.xml'
         },
         'necesita_locale': True,
-        'locale_code': 'il'
+        'locale_code': 'il',
+        'sap_adobe': 'ILST',
+        'cdn_descarta': ['*', 'Application'],
+        'cdn_anio_a_major': {2018: 22, 2019: 23, 2020: 24, 2021: 25, 2022: 26, 2023: 27, 2024: 28, 2025: 29, 2026: 30}
     },
     'incopy': {
         'nombre': 'InCopy',
@@ -106,7 +119,10 @@ CONFIG_PROGRAMAS_ADOBE = {
             'Darwin': 'Resources/AMT/IC/AMT/application.xml'
         },
         'necesita_locale': True,
-        'locale_code': 'inc'
+        'locale_code': 'inc',
+        'sap_adobe': 'AICY',
+        'cdn_descarta': ['*', 'INSTALLDIR'],
+        'cdn_anio_a_major': {2018: 13, 2019: 14, 2020: 15, 2021: 16, 2022: 17, 2023: 18, 2024: 19, 2025: 20, 2026: 21}
     },
     'character_animator': {
         'nombre': 'Character Animator',
@@ -123,59 +139,24 @@ CONFIG_PROGRAMAS_ADOBE = {
 # Nota: en el 2022 Adobe unificó todas las versiones según el año (por lo menos para las apps aquí listadas)
 VERSIONES_ADOBE_MACOS = {
     'after_effects': {
-        2018: '15.0',
-        2019: '16.0',
-        2020: '17.0',
-        2021: '18.0',
-        2022: '22.0',
-        2023: '23.0',
-        2024: '24.0',
-        2025: '25.0',
-        2026: '26.0'
+        2018: '15.0', 2019: '16.0', 2020: '17.0', 2021: '18.0', 2022: '22.0',
+        2023: '23.0', 2024: '24.0', 2025: '25.0', 2026: '26.0'
     },
     'audition': {
-        2018: '11.0',
-        2019: '12.0',
-        2020: '13.0',
-        2021: '14.0',
-        2022: '22.0',
-        2023: '23.0',
-        2024: '24.0',
-        2025: '25.0',
-        2026: '26.0'
+        2018: '11.0', 2019: '12.0', 2020: '13.0', 2021: '14.0', 2022: '22.0',
+        2023: '23.0', 2024: '24.0', 2025: '25.0', 2026: '26.0'
     },
     'character_animator': {
-        2018: '1.1',
-        2019: '2.0',
-        2020: '3.0',
-        2021: '4.0',
-        2022: '22.0',
-        2023: '23.0',
-        2024: '24.0',
-        2025: '25.0',
-        2026: '26.0'
-    },
+        2018: '1.1', 2019: '2.0', 2020: '3.0', 2021: '4.0', 2022: '22.0',
+        2023: '23.0', 2024: '24.0', 2025: '25.0', 2026: '26.0'
+        },
     'media_encoder': {
-        2018: '12.0',
-        2019: '13.0',
-        2020: '14.0',
-        2021: '15.0',
-        2022: '22.0',
-        2023: '23.0',
-        2024: '24.0',
-        2025: '25.0',
-        2026: '26.0'
-    },
+        2018: '12.0', 2019: '13.0', 2020: '14.0', 2021: '15.0', 2022: '22.0',
+        2023: '23.0', 2024: '24.0', 2025: '25.0', 2026: '26.0'
+        },
     'premiere_pro': {
-        2018: '12.0',
-        2019: '13.0',
-        2020: '14.0',
-        2021: '15.0',
-        2022: '22.0',
-        2023: '23.0',
-        2024: '24.0',
-        2025: '25.0',
-        2026: '26.0'
+        2018: '12.0', 2019: '13.0', 2020: '14.0', 2021: '15.0', 2022: '22.0',
+        2023: '23.0', 2024: '24.0', 2025: '25.0', 2026: '26.0'
     }
 }
 
