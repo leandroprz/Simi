@@ -1,5 +1,8 @@
 # Changelog - Simi
 
+## 3.0
+- Improved how Simi gets language packs for: InDesign, InCopy, Photoshop, Illustrator and Animate
+
 ## v2.9.1
 - Fixed a cosmetic issue in the app's new version downloader screen
 - Fixed an issue that was attaching unnecessary assets to the Windows and macOS binaries
