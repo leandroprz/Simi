@@ -91,7 +91,7 @@ def detecta_encoding(ruta_archivo: str) -> str:
     import xml.etree.ElementTree as ET
 
     try:
-        # Parsea el XML (valida encoding automáticamente)
+        # Parsea el XML y valida encoding
         ET.parse(ruta_archivo)
 
         # Extrae el encoding usando regex precompilado
