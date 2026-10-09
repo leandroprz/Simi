@@ -585,7 +585,6 @@ class DisplayTerminal(tk.Text):
     def flush(self):
         pass
 
-
 class RedireccionaStdin:
     """ Lee y redirecciona stdin """
     def __init__(self, queue):
@@ -595,13 +594,12 @@ class RedireccionaStdin:
         """ Bloquea hasta que una línea está disponible en la cola """
         return self.queue.get()
 
-
 class App(TkinterDnD.Tk):
     """ Ventana principal de la GUI """
     def __init__(self, script_path: str):
         super().__init__()
         self.script_path = script_path
-        self.title(f"Simi v{VERSION_ACTUAL_SIMI}")
+        self.title(f"Simi")
         self.terminal_font = font.Font(family=TIPOGRAFIA_TERMINAL, size=TAMANIO_TIPOGRAFIA)
 
         if _ES_WINDOWS:
