@@ -16,6 +16,8 @@ This tool was born out of the need to quickly switch the language of different A
 ### Compiled version (Windows and macOS)
 [Click here](https://github.com/leandroprz/Simi/releases/latest) to open the releases page and download the latest version for your operating system. Choose the file ending in `.exe` for Windows or `.dmg` for macOS.
 
+Once in the app, follow the instructions on the screen.
+
 ### Uncompiled version (Windows)
 1. Download and extract the code
 2. Double-click `Simi.bat`
@@ -36,7 +38,8 @@ This tool was born out of the need to quickly switch the language of different A
 
 ## Features
 - No need to reinstall Adobe programs to change the language
-- Compatible with Adobe 2018–2026
+- No need to have Creative Cloud Desktop installed
+- Compatible with Adobe 2018+
 - Windows and macOS support
 - Simple interface with clickable paths
 - Drag & drop folder support
@@ -156,7 +159,7 @@ a = Analysis(
         ('assets/icono_win.ico', 'assets'),
     ],
     hiddenimports=[
-        'config', 'main', 'i18n', 'idiomas_adobe', 'interfaz', 'permisos_admin', 'resource_helper', 'shared_state', 'simi', 'traduccion_rutas', 'utils_adobe', 'utils_app', 'utils_archivos', 'utils_adobe_cdn', 'platform', 'os', 'sys', 'psutil', 'webbrowser', 'requests', 'subprocess', 'shutil', 'zipfile', 'ctypes', 'xml.etree.ElementTree', 'colorama', 'textwrap', 'pathlib', 'typing', 'urllib.parse', 're', 'runpy', 'time', 'tkinter', 'threading', 'queue', 'plistlib', 'uuid', 'tempfile', 'tkinterdnd2'
+        'config', 'main', 'i18n', 'idiomas_adobe', 'interfaz', 'permisos_admin', 'resource_helper', 'shared_state', 'simi', 'traduccion_rutas', 'utils_adobe', 'utils_app', 'utils_archivos', 'utils_adobe_cdn', 'platform', 'os', 'sys', 'psutil', 'lzma', 'webbrowser', 'requests', 'subprocess', 'shutil', 'zipfile', 'ctypes', 'xml.etree.ElementTree', 'colorama', 'textwrap', 'pathlib', 'typing', 'urllib.parse', 're', 'runpy', 'time', 'tkinter', 'threading', 'queue', 'plistlib', 'uuid', 'tempfile', 'tkinterdnd2', 'importlib.util', 'asyncio'
     ],
     hookspath=[],
     hooksconfig={},
@@ -206,7 +209,7 @@ a = Analysis(
         ('src', 'src'),
     ],
     hiddenimports=[
-        'config', 'main', 'i18n', 'idiomas_adobe', 'interfaz', 'permisos_admin', 'resource_helper', 'shared_state', 'simi', 'traduccion_rutas', 'utils_adobe', 'utils_app', 'utils_archivos', 'utils_adobe_cdn', 'platform', 'os', 'sys', 'psutil', 'webbrowser', 'requests', 'subprocess', 'shutil', 'zipfile', 'ctypes', 'xml.etree.ElementTree', 'colorama', 'textwrap', 'pathlib', 'typing', 'urllib.parse', 're', 'runpy', 'time', 'tkinter', 'threading', 'queue', 'plistlib', 'uuid', 'tempfile', 'tkinterdnd2'
+        'config', 'main', 'i18n', 'idiomas_adobe', 'interfaz', 'permisos_admin', 'resource_helper', 'shared_state', 'simi', 'traduccion_rutas', 'utils_adobe', 'utils_app', 'utils_archivos', 'utils_adobe_cdn', 'platform', 'os', 'sys', 'psutil', 'lzma', 'webbrowser', 'requests', 'subprocess', 'shutil', 'zipfile', 'ctypes', 'xml.etree.ElementTree', 'colorama', 'textwrap', 'pathlib', 'typing', 'urllib.parse', 're', 'runpy', 'time', 'tkinter', 'threading', 'queue', 'plistlib', 'uuid', 'tempfile', 'tkinterdnd2'
     ],
     hookspath=[],
     hooksconfig={},
