@@ -15,12 +15,16 @@ import re
 import shutil
 import string
 import zipfile
+import tempfile
+from typing import IO, Dict, List, Optional
 from pathlib import Path
 from typing import Dict, List, Optional
 from xml.etree import ElementTree as ET
 
 # Imports Simi
-from config import CONFIG_PROGRAMAS_ADOBE
+from config import CONFIG_PROGRAMAS_ADOBE, CARPETA_DATOS_COMPARTIDOS, COMENTARIO_ZIP_OFICIAL
+from i18n import TEXTOS
+from interfaz import ANCHO_PANTALLA, PADDING_EXT, BarraProgreso, muestra_contenido
 
 # Constantes de los servidores de Adobe
 _URL_PRODUCTOS = (
@@ -30,6 +34,8 @@ _URL_PRODUCTOS = (
 _URL_APLICACION = 'https://cdn-ffc.oobesaas.adobe.com/core/v3/applications'
 _TIMEOUT = 15
 _TAMANIO_CHUNK = 256 * 1024
+# Plataformas en orden de preferencia para macOS (universal primero, luego Intel y Apple Silicon)
+_PLATAFORMAS = ('win64',) if platform.system() == 'Windows' else ('macuniversal', 'osx10-64', 'macarm64')
 
 def _headers(build_guid: Optional[str] = None) -> Dict[str, str]:
     """ Headers para los servidores de Adobe """
@@ -43,7 +49,7 @@ def _headers(build_guid: Optional[str] = None) -> Dict[str, str]:
         headers['x-adobe-build-guid'] = build_guid
     return headers
 
-def _busca_producto(sap: str, prefijo_version: str, plataforma: str) -> Optional[tuple]:
+def _busca_producto(sap: str, prefijo_version: str) -> Optional[tuple]:
     """
     Busca en el catálogo de Adobe la versión más nueva de un programa cuya versión empiece
     con prefijo_version (ej: '27.' para Photoshop 2026)
@@ -51,7 +57,6 @@ def _busca_producto(sap: str, prefijo_version: str, plataforma: str) -> Optional
     Args:
         sap: Código SAP del programa (PHSP, AICY, IDSN, ILST, FLPR)
         prefijo_version: Prefijo de la versión mayor a buscar (ej: '27.')
-        plataforma: 'win64' o 'macuniversal'/'osx10-64'
 
     Returns:
         Tuple (version, build_guid) o None si no se encontró (versión vieja, fuera del catálogo v6)
@@ -62,11 +67,7 @@ def _busca_producto(sap: str, prefijo_version: str, plataforma: str) -> Optional
     respuesta.raise_for_status()
     raiz = ET.fromstring(respuesta.content)
 
-    plataformas_a_probar = [plataforma]
-    if platform.system() == 'Darwin':
-        plataformas_a_probar.append('osx10-64' if plataforma == 'macuniversal' else 'macuniversal')
-
-    for pf_probada in plataformas_a_probar:
+    for pf_probada in _PLATAFORMAS:
         candidatos = []
         for producto in raiz.findall('channels/channel/products/product'):
             version = producto.get('version', '')
@@ -130,16 +131,34 @@ def _paquete_de_idioma(build_guid: str, idioma: str) -> Optional[dict]:
 
     return {'cdn': cdn, 'path': path, 'compresion': compresion}
 
-def _descarga_a_memoria(url: str) -> bytes:
-    """ Descarga un archivo completo a memoria (los paquetes de idioma son chicos, unos pocos MB) """
+def _descarga_a_archivo_temporal(url: str) -> IO[bytes]:
+    """
+    Descarga a un archivo temporal que se borra solo al cerrarlo,
+    listo para leer desde el inicio, mostrando una barra de progreso
+    """
     import requests
 
-    with requests.get(url, headers=_headers(), stream=True, timeout=_TIMEOUT) as r:
-        r.raise_for_status()
-        partes = bytearray()
-        for chunk in r.iter_content(chunk_size=_TAMANIO_CHUNK):
-            partes.extend(chunk)
-        return bytes(partes)
+    archivo = tempfile.TemporaryFile()
+
+    try:
+        with requests.get(url, headers=_headers(), stream=True, timeout=_TIMEOUT) as r:
+            r.raise_for_status()
+            muestra_contenido(f"{TEXTOS['descargando']}")
+            progreso = BarraProgreso(int(r.headers.get('content-length', 0)), modo='descarga')
+
+            for chunk in r.iter_content(chunk_size=_TAMANIO_CHUNK):
+                archivo.write(chunk)
+                progreso.actualiza(len(chunk))
+
+            progreso.finaliza()
+            print(" " * PADDING_EXT + "│" + " " * (ANCHO_PANTALLA - 2) + "│")
+
+        archivo.seek(0)
+        return archivo
+
+    except Exception:
+        archivo.close()
+        raise
 
 def _tamanio_diccionario(byte_prop: int) -> int:
     """ Convierte el byte de propiedades LZMA2 en tamaño de diccionario """
@@ -157,13 +176,14 @@ def _descomprime_lzma2(datos: bytes) -> bytes:
     filtros = [{'id': lzma.FILTER_LZMA2, 'dict_size': _tamanio_diccionario(datos[0])}]
     return lzma.decompress(datos[1:], format=lzma.FORMAT_RAW, filters=filtros)
 
-def _extrae_paquete(datos_zip: bytes, carpeta_destino: Path, lzma2: bool) -> None:
-    """ Extrae el zip de Adobe en carpeta_destino, descomprimiendo cada archivo si lzma2=True """
-    import io
-
+def _extrae_paquete(datos_zip: IO[bytes], carpeta_destino: Path, lzma2: bool) -> None:
+    """
+    Extrae el zip de Adobe (archivo abierto en modo binario) en carpeta_destino,
+    descomprimiendo cada archivo si lzma2=True
+    """
     carpeta_destino = carpeta_destino.resolve()
 
-    with zipfile.ZipFile(io.BytesIO(datos_zip), metadata_encoding='utf-8') as z:
+    with zipfile.ZipFile(datos_zip, metadata_encoding='utf-8') as z:
         for info in z.infolist():
             # Adobe usa "\" en los nombres y zipfile solo lo convierte a "/" en Windows
             nombre = info.filename.replace('\\', '/')
@@ -191,7 +211,8 @@ def _quita_localized(nombre: str) -> str:
     """ Quita el sufijo .localized que usa macOS en algunas carpetas de Adobe """
     return nombre[:-len('.localized')] if nombre.endswith('.localized') else nombre
 
-def _reorganiza_paquete(carpeta_extraida: Path, sap: str, locale: str, lista_descarta: List[str]) -> Path:
+def _reorganiza_paquete(carpeta_extraida: Path, sap: str, locale: str, lista_descarta: List[str],
+                        lista_conserva: Optional[List[str]] = None) -> Path:
     """
     Reorganiza el árbol ya extraído para que quede igual a los zips de idioma que están en Github
     Entra a la carpeta numérica de Adobe, descarta las carpetas intermedias que ese programa no necesita
@@ -222,6 +243,14 @@ def _reorganiza_paquete(carpeta_extraida: Path, sap: str, locale: str, lista_des
 
     origen = avanza(subcarpetas[0], descarta)
 
+    # Carpeta de datos compartidos (opcional: no todos los paquetes de idioma la tienen)
+    origen_compartido = None
+    if lista_conserva:
+        try:
+            origen_compartido = avanza(subcarpetas[0], lista_conserva)
+        except ValueError:
+            pass
+
     carpeta_final = carpeta_extraida.parent / f"{sap}_{locale}_final"
     if carpeta_final.exists():
         shutil.rmtree(carpeta_final)
@@ -237,6 +266,8 @@ def _reorganiza_paquete(carpeta_extraida: Path, sap: str, locale: str, lista_des
                 shutil.move(str(item), str(destino))
 
     mueve_arbol(origen, carpeta_final)
+    if origen_compartido:
+        mueve_arbol(origen_compartido, carpeta_final / CARPETA_DATOS_COMPARTIDOS)
     shutil.rmtree(carpeta_extraida)
 
     return carpeta_final
@@ -246,6 +277,7 @@ def _comprime_carpeta(carpeta: Path, ruta_zip: Path) -> None:
     ruta_zip.parent.mkdir(parents=True, exist_ok=True)
 
     with zipfile.ZipFile(ruta_zip, 'w', zipfile.ZIP_DEFLATED) as z:
+        z.comment = COMENTARIO_ZIP_OFICIAL
         for ruta in sorted(carpeta.rglob('*')):
             nombre_en_zip = ruta.relative_to(carpeta).as_posix()
             if ruta.is_dir():
@@ -287,9 +319,7 @@ def descarga_desde_adobe(programa_key: str, anio: int, locale_xml: str, ruta_zip
     carpeta_temporal = ruta_zip_destino.parent / f"_temp_{sap}_{locale_xml}"
 
     try:
-        plataforma = 'win64' if platform.system() == 'Windows' else 'macuniversal'
-
-        resultado = _busca_producto(sap, f"{major_version}.", plataforma)
+        resultado = _busca_producto(sap, f"{major_version}.")
         if resultado is None:
             return False
         _, guid = resultado
@@ -298,14 +328,14 @@ def descarga_desde_adobe(programa_key: str, anio: int, locale_xml: str, ruta_zip
         if info_paquete is None:
             return False
 
-        datos_zip = _descarga_a_memoria(info_paquete['cdn'] + info_paquete['path'])
-
         if carpeta_temporal.exists():
             shutil.rmtree(carpeta_temporal)
         carpeta_temporal.mkdir(parents=True, exist_ok=True)
 
-        _extrae_paquete(datos_zip, carpeta_temporal, lzma2=(info_paquete['compresion'] == 'zip-lzma2'))
-        carpeta_final = _reorganiza_paquete(carpeta_temporal, sap, locale_xml, lista_descarta)
+        with _descarga_a_archivo_temporal(info_paquete['cdn'] + info_paquete['path']) as datos_zip:
+            _extrae_paquete(datos_zip, carpeta_temporal, lzma2=(info_paquete['compresion'] == 'zip-lzma2'))
+
+        carpeta_final = _reorganiza_paquete(carpeta_temporal, sap, locale_xml, lista_descarta, config_programa.get('cdn_conserva'))
         _comprime_carpeta(carpeta_final, ruta_zip_destino)
         shutil.rmtree(carpeta_final, ignore_errors=True)
 
