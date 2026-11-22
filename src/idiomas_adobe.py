@@ -18,8 +18,8 @@ import shared_state
 from config import VERSION_ACTUAL_SIMI, URLS, CONFIG_PROGRAMAS_ADOBE
 from i18n import TEXTOS
 from interfaz import limpia_pantalla, borde_superior, borde_inferior, muestra_contenido, muestra_input_usuario, titulo_subrayado
-from utils_adobe import ruta_instalacion_programa, chequea_cierra_app
-from utils_archivos import descargar_archivo, edita_idioma_xml, restaura_idioma_xml, get_carpeta_descargas
+from utils_adobe import ruta_instalacion_programa, chequea_cierra_app, ruta_datos_compartidos, carpetas_en_us_macos
+from utils_archivos import descargar_archivo, edita_idioma_xml, restaura_idioma_xml, renombra_carpetas_en_us, get_carpeta_descargas
 from utils_adobe_cdn import descarga_desde_adobe
 from permisos_admin import ejecutar_operaciones_pendientes
 
@@ -76,6 +76,8 @@ def cambiar_idioma_programa(programa_key):
     # Guarda en shared_state.py para mostrar al usuario
     shared_state.ruta_instal_print = ruta_instal_programa_base
 
+    carpetas_en_us = carpetas_en_us_macos(programa_key, version_adobe, ruta_instal_programa_base)
+
     # Determina ruta del XML si no es solo locale
     ruta_xml = None
     if not config.get('solo_locale', False):
@@ -127,14 +129,20 @@ def cambiar_idioma_programa(programa_key):
         ruta_cache_locale = os.path.join(
             get_carpeta_descargas(), "Simi", "idiomas", carpeta_os, locale_code, str(version_adobe), f"{locale_xml}.zip"
         )
+
+        desde_adobe = False
         if not os.path.exists(ruta_cache_locale):
             muestra_contenido(f"{TEXTOS['buscando_paquete_idioma']}\n")
-            descarga_desde_adobe(programa_key, version_adobe, locale_xml, Path(ruta_cache_locale))
+            desde_adobe = descarga_desde_adobe(programa_key, version_adobe, locale_xml, Path(ruta_cache_locale))
+            if desde_adobe:
+                muestra_contenido(f"{Fore.LIGHTGREEN_EX}{TEXTOS['descarga_exitosa']}\n[{ruta_cache_locale}]")
 
-        descarga_exitosa = descargar_archivo(
+        descarga_exitosa, _ = descargar_archivo(
             url_locale,
             auto_unzip=True,
-            ruta_unzip=str(ruta_instal_programa_base)
+            ruta_unzip=str(ruta_instal_programa_base),
+            ruta_comun=ruta_datos_compartidos(programa_key, version_adobe),
+            muestra_existente=not desde_adobe
         )
 
         if not descarga_exitosa:
@@ -154,6 +162,9 @@ def cambiar_idioma_programa(programa_key):
         xml_exitoso = edita_idioma_xml(str(ruta_xml), locale_xml)
         if not xml_exitoso:
             return False
+
+    # Oculta las carpetas en_US (macOS 2027, InCopy/InDesign) salvo que el nuevo idioma sea inglés
+    renombra_carpetas_en_us(carpetas_en_us, ocultar=(locale_xml != 'en_US'))
 
     # Ejecuta todas las operaciones pendientes de un solo saque
     if shared_state.operaciones_pendientes_admin:
@@ -202,6 +213,12 @@ def restaurar_xml_programa(programa_key):
     # Obtiene valores de shared_state.py que son ingresados en los menús
     version_adobe = shared_state.version_adobe
 
+    if version_adobe is None:
+        muestra_contenido(f"{Fore.LIGHTRED_EX}{TEXTOS['no_restauro']}\n")
+        borde_inferior()
+        muestra_input_usuario(f"{TEXTOS['input_menu_anterior']}").strip()
+        return False
+
     shared_state.operaciones_pendientes_admin = []
 
     config = CONFIG_PROGRAMAS_ADOBE[programa_key]
@@ -246,6 +263,8 @@ def restaurar_xml_programa(programa_key):
     # Guarda en shared_state.py para mostrar al usuario
     shared_state.ruta_instal_print = ruta_instal_programa_base
 
+    carpetas_en_us = carpetas_en_us_macos(programa_key, version_adobe, ruta_instal_programa_base)
+
     # Construye ruta del .bak
     xml_subpath = config['xml_paths'].get(platform.system())
     ruta_bak = Path(ruta_instal_programa_base) / xml_subpath.replace('.xml', '.bak')
@@ -285,7 +304,7 @@ def restaurar_xml_programa(programa_key):
 
     # Restaura el .bak
     ruta_xml = ruta_bak.with_suffix('.xml')
-    bak_exitoso, idioma_restaurado = restaura_idioma_xml(ruta_xml)
+    bak_exitoso, idioma_restaurado = restaura_idioma_xml(ruta_xml, carpetas_en_us)
     if not bak_exitoso:
         return False
 
@@ -305,9 +324,12 @@ def restaurar_xml_programa(programa_key):
             return False
 
     # Mensaje exitoso
-    muestra_contenido(
-        f"{Fore.LIGHTGREEN_EX}{TEXTOS['restauro_correctamente_1']} {idioma_restaurado} {TEXTOS['restauro_correctamente_2']} [{ruta_bak}]\n"
-    )
+    if idioma_restaurado:
+        mensaje = f"{TEXTOS['restauro_correctamente_1']} {idioma_restaurado} {TEXTOS['restauro_correctamente_2']}"
+    else:
+        mensaje = TEXTOS['restauro_correctamente_sin_idioma']
+
+    muestra_contenido(f"{Fore.LIGHTGREEN_EX}{mensaje} [{ruta_bak}]\n")
     borde_inferior()
 
     muestra_input_usuario(f"{TEXTOS['input_menu_anterior']}").strip()
