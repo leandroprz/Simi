@@ -18,7 +18,7 @@ from pathlib import Path
 import shared_state
 from interfaz import muestra_contenido, borde_inferior, muestra_input_usuario, titulo_subrayado, limpia_pantalla, borde_superior
 from i18n import TEXTOS
-from config import VERSION_ACTUAL_SIMI, VERSIONES_ADOBE_MACOS, RUTAS_ADOBE_MACOS
+from config import VERSION_ACTUAL_SIMI, VERSIONES_ADOBE_MACOS, RUTAS_ADOBE_MACOS, CONFIG_PROGRAMAS_ADOBE, RUTAS_COMUN_ADOBE
 
 # Constantes
 _SISTEMA_OPERATIVO = platform.system()
@@ -32,6 +32,31 @@ if _ES_WINDOWS:
 else:
     _PROGRAMW6432 = ''
     _RUTAS_PROGRAM_FILES = []
+
+def ruta_datos_compartidos(programa_key: str, version_adobe: int) -> Optional[str]:
+    """
+    Ruta en la carpeta común de Adobe donde van los datos compartidos de un programa
+    macOS: /Library/Application Support/Adobe/InDesign/Version 22.0
+    Windows: %PROGRAMDATA%\\Adobe\\InDesign\\Version 22.0
+
+    Returns:
+        Ruta como string o None si el programa no tiene datos compartidos
+    """
+    config = CONFIG_PROGRAMAS_ADOBE[programa_key]
+    carpeta = config.get('carpeta_comun_adobe')
+    if carpeta is None:
+        return None
+
+    major = config['cdn_anio_a_major'][version_adobe]
+    return os.path.join(RUTAS_COMUN_ADOBE[_SISTEMA_OPERATIVO], carpeta, f"Version {major}.0")
+
+def carpetas_en_us_macos(programa_key: str, version_adobe: int, ruta_instalacion: Path) -> List[Path]:
+    """ Carpetas que contienen una carpeta en_US que hay que renombrar en macOS (lista vacía en otros casos) """
+    if not _ES_MACOS:
+        return []
+
+    subrutas = CONFIG_PROGRAMAS_ADOBE[programa_key].get('macos_renombra_en_us', {}).get(version_adobe, [])
+    return [ruta_instalacion / subruta for subruta in subrutas]
 
 def versiones_adobe_macos(version_adobe: int) -> Dict[str, str]:
     """
