@@ -14,13 +14,13 @@ import platform
 import tempfile
 import shutil
 from pathlib import Path
-from typing import Tuple, Optional, Dict, List
+from typing import Tuple, Optional, Dict, List, Sequence
 from colorama import Fore
 from urllib.parse import urlparse
 
 # Imports Simi
 import shared_state
-from config import TAG_IDIOMAS
+from config import TAG_IDIOMAS, CARPETA_DATOS_COMPARTIDOS, COMENTARIO_ZIP_FALLBACK
 from i18n import TEXTOS
 from interfaz import ANCHO_PANTALLA, PADDING_EXT, BarraProgreso, muestra_contenido, borde_inferior, muestra_input_usuario
 from permisos_admin import requiere_permisos_administrativos, planifica_ops_sis_archivos
@@ -139,15 +139,18 @@ def edita_idioma_xml(ruta_carpeta: str, nuevo_idioma: str) -> bool:
         with open(ruta_archivo_xml, 'r', encoding=encoding) as f:
             contenido = f.read()
 
-        if not re.search(TAG_IDIOMAS, contenido):
+        # Si el tag existe cambia el idioma, si no existe lo agrega al final del tag <Payload>
+        nuevo_tag = f'<Data key="installedLanguages">{nuevo_idioma}</Data>'
+
+        if re.search(TAG_IDIOMAS, contenido):
+            contenido_actualizado = re.sub(TAG_IDIOMAS, nuevo_tag, contenido)
+        elif '</Payload>' in contenido:
+            contenido_actualizado = contenido.replace('</Payload>', f'{nuevo_tag}</Payload>', 1)
+        else:
             return _mostrar_error_y_salir(
                 f"{Fore.LIGHTRED_EX}{TEXTOS['no_cambio']}\n\n"
                 f"{Fore.LIGHTYELLOW_EX}{TEXTOS['razones']}\n"
             )
-
-        # Cambia el contenido
-        nuevo_tag = f'<Data key="installedLanguages">{nuevo_idioma}</Data>'
-        contenido_actualizado = re.sub(TAG_IDIOMAS, nuevo_tag, contenido)
 
         # Prepara las rutas
         ruta_xml = Path(ruta_archivo_xml)
@@ -185,7 +188,7 @@ def _construir_operaciones_edicion_xml(ruta_xml: str, ruta_backup: Path,
              'destino': str(ruta_xml), 'encoding': encoding}
         ]
 
-def restaura_idioma_xml(ruta_carpeta: str) -> Tuple[bool, Optional[str]]:
+def restaura_idioma_xml(ruta_carpeta: str, carpetas_en_us: Sequence[Path] = ()) -> Tuple[bool, Optional[str]]:
     """
     Restaura el idioma de un programa de Adobe desde un backup
 
@@ -218,6 +221,7 @@ def restaura_idioma_xml(ruta_carpeta: str) -> Tuple[bool, Optional[str]]:
 
         # Planifica las operaciones
         planifica_ops_sis_archivos(operaciones)
+        renombra_carpetas_en_us(carpetas_en_us, ocultar=False)
 
         return True, idioma_legible
 
@@ -227,7 +231,7 @@ def restaura_idioma_xml(ruta_carpeta: str) -> Tuple[bool, Optional[str]]:
         muestra_input_usuario(f"{TEXTOS['input_menu_anterior']}").strip()
         return False, None
 
-def _extraer_idioma_de_backup(ruta_backup: Path) -> str:
+def _extraer_idioma_de_backup(ruta_backup: Path) -> Optional[str]:
     """ Helper para extraer el idioma del archivo backup """
     try:
         encoding = detecta_encoding(str(ruta_backup))
@@ -239,15 +243,15 @@ def _extraer_idioma_de_backup(ruta_backup: Path) -> str:
             idioma_locale = match.group(1).strip()
             # Mapeo de locales a nombres legibles
             if idioma_locale == 'en_US':
-                return 'inglés'
+                return TEXTOS['idioma_ingles']
             elif idioma_locale == 'es_ES':
-                return 'español'
+                return TEXTOS['idioma_espanol']
             else:
                 return idioma_locale
     except:
         pass
 
-    return "desconocido"
+    return None
 
 def _construir_operaciones_restauracion(ruta_xml: str, ruta_backup: Path) -> List[Dict]:
     """ Helper para construir operaciones de restauración según OS """
@@ -277,6 +281,36 @@ def _construir_operaciones_restauracion(ruta_xml: str, ruta_backup: Path) -> Lis
         })
 
     return operaciones
+
+def renombra_carpetas_en_us(carpetas: Sequence[Path], ocultar: bool) -> None:
+    """
+    InDesign/InCopy 2027 en macOS siguen mostrando la interfaz en inglés si existen las carpetas en_US,
+    aunque estén las del nuevo idioma. Se renombran a _en_US para ocultarlas (ocultar=True) o se vuelven
+    a su nombre original (ocultar=False). Si ya existe el destino, se reemplaza
+
+    Args:
+        carpetas: Carpetas que contienen una carpeta en_US
+        ocultar: True para en_US -> _en_US, False para _en_US -> en_US
+    """
+    nombre_actual, nombre_nuevo = ('en_US', '_en_US') if ocultar else ('_en_US', 'en_US')
+    operaciones = []
+
+    for carpeta in carpetas:
+        origen = carpeta / nombre_actual
+        if not origen.exists():
+            continue
+
+        destino = carpeta / nombre_nuevo
+        if ocultar:
+            # Reemplaza un _en_US viejo si existe
+            comando = f"rm -rf '{destino}' && mv '{origen}' '{destino}'"
+        else:
+            # Si ya existe en_US (ej: lo copió el paquete de idioma) es el más nuevo, se descarta _en_US
+            comando = f"if [ -e '{destino}' ]; then rm -rf '{origen}'; else mv '{origen}' '{destino}'; fi"
+
+        operaciones.append({'accion': 'comando', 'comando': comando})
+
+    planifica_ops_sis_archivos(operaciones)
 
 def _construye_mapeo_localized(ruta_destino: str) -> Dict[str, str]:
     """
@@ -309,7 +343,54 @@ def _construye_mapeo_localized(ruta_destino: str) -> Dict[str, str]:
 
     return mapeo
 
-def descomprime_zip(ruta_zip: str, ruta_unzip: str, elimina_zip: bool = False) -> bool:
+def _es_dato_compartido(nombre: str) -> bool:
+    """ True si el archivo del zip está dentro de la carpeta de datos compartidos """
+    return nombre.replace('\\', '/').split('/')[0] == CARPETA_DATOS_COMPARTIDOS
+
+def _miembros_instalacion(zip_ref) -> list:
+    """ Archivos del zip que van a la carpeta de instalación (todos menos los datos compartidos) """
+    return [info for info in zip_ref.infolist() if not _es_dato_compartido(info.filename)]
+
+def _planifica_datos_compartidos(ruta_zip: str, ruta_comun: str) -> None:
+    """
+    Planifica la copia de SharedApplicationData/Extensions/<locale> a <ruta_comun>/<locale>/Extensions
+
+    Args:
+        ruta_zip: Ruta del paquete de idioma
+        ruta_comun: Carpeta común de Adobe (ej: .../InDesign/Version 22.0)
+    """
+    import zipfile
+
+    with zipfile.ZipFile(ruta_zip, 'r', metadata_encoding='utf-8') as zip_ref:
+        miembros = [info for info in zip_ref.infolist() if _es_dato_compartido(info.filename)]
+        if not miembros:
+            return # Paquete sin datos compartidos (ej: el que viene de GitHub)
+
+        carpeta_temp = tempfile.mkdtemp(prefix='simi_shared_')
+        zip_ref.extractall(carpeta_temp, members=miembros)
+
+    origen_extensions = os.path.join(carpeta_temp, CARPETA_DATOS_COMPARTIDOS, 'Extensions')
+    operaciones = []
+
+    for locale in os.listdir(origen_extensions):
+        origen = os.path.join(origen_extensions, locale)
+        destino = os.path.join(ruta_comun, locale, 'Extensions')
+        operaciones.append({'accion': 'crear_carpeta', 'ruta': destino})
+
+        if _ES_WINDOWS:
+            operaciones.append({'accion': 'comando', 'comando': f'xcopy /E /I /Y "{origen}" "{destino}"'})
+        else: # macOS
+            operaciones.append({'accion': 'comando', 'comando': f"cp -R '{origen}'/. '{destino}'/"})
+
+    # Los comandos se ejecutan más tarde, por eso la carpeta temporal se borra al final
+    if _ES_WINDOWS:
+        operaciones.append({'accion': 'comando', 'comando': f'rmdir /S /Q "{carpeta_temp}"'})
+    else:
+        operaciones.append({'accion': 'comando', 'comando': f"rm -rf '{carpeta_temp}'"})
+
+    planifica_ops_sis_archivos(operaciones)
+
+def descomprime_zip(ruta_zip: str, ruta_unzip: str, elimina_zip: bool = False, ruta_comun: Optional[str] = None) -> bool:
     """
     Descomprime un archivo ZIP a una ruta específica, sobreescribiendo archivos y carpetas sin preguntar
 
@@ -324,6 +405,9 @@ def descomprime_zip(ruta_zip: str, ruta_unzip: str, elimina_zip: bool = False) -
     import zipfile
 
     try:
+        if ruta_comun:
+            _planifica_datos_compartidos(ruta_zip, ruta_comun)
+
         if _ES_WINDOWS:
             return _descomprime_zip_windows(ruta_zip, ruta_unzip, elimina_zip)
         else: # macOS
@@ -352,11 +436,11 @@ def _descomprime_zip_windows_admin(ruta_zip: str, ruta_unzip: str, elimina_zip: 
 
     try:
         with zipfile.ZipFile(ruta_zip, 'r') as zip_ref:
-            lista_archivos = zip_ref.namelist()
+            miembros = _miembros_instalacion(zip_ref)
             muestra_contenido(f"\n{TEXTOS['copiando_idioma']}")
-            progreso = BarraProgreso(len(lista_archivos), modo='unzip', tiempo_actualizacion=0.05)
+            progreso = BarraProgreso(len(miembros), modo='unzip', tiempo_actualizacion=0.05)
 
-            for info_archivo in zip_ref.infolist():
+            for info_archivo in miembros:
                 try:
                     zip_ref.extract(info_archivo, carpeta_temp)
                     progreso.actualiza(1, info_archivo.filename)
@@ -397,10 +481,10 @@ def _descomprime_zip_windows_directo(ruta_zip: str, ruta_unzip: str, elimina_zip
     import zipfile
 
     with zipfile.ZipFile(ruta_zip, 'r', metadata_encoding='utf-8') as zip_ref:
-        lista_archivos = zip_ref.namelist()
-        progreso = BarraProgreso(len(lista_archivos), modo='unzip', tiempo_actualizacion=0.05)
+        miembros = _miembros_instalacion(zip_ref)
+        progreso = BarraProgreso(len(miembros), modo='unzip', tiempo_actualizacion=0.05)
 
-        for info_archivo in zip_ref.infolist():
+        for info_archivo in miembros:
             try:
                 zip_ref.extract(info_archivo, ruta_unzip)
                 progreso.actualiza(1, info_archivo.filename)
@@ -424,7 +508,7 @@ def _descomprime_zip_macos(ruta_zip: str, ruta_unzip: str, elimina_zip: bool) ->
 
     try:
         with zipfile.ZipFile(ruta_zip, 'r', metadata_encoding='utf-8') as zip_ref:
-            zip_ref.extractall(carpeta_temp)
+            zip_ref.extractall(carpeta_temp, members=_miembros_instalacion(zip_ref))
 
         if requiere_permisos_administrativos(str(ruta_unzip)):
             return _descomprime_zip_macos_admin(carpeta_temp, ruta_unzip, ruta_zip, elimina_zip)
@@ -522,7 +606,8 @@ def _descomprime_zip_macos_directo(carpeta_temp: str, ruta_unzip: str, ruta_zip:
     return True
 
 def descargar_archivo(url: str, auto_unzip: bool = False, ruta_unzip: Optional[str] = None,
-                     ruta_destino: Optional[str] = None, ultima_version: Optional[str] = None) -> Tuple[bool, Optional[str]]:
+                     ruta_destino: Optional[str] = None, ultima_version: Optional[str] = None,
+                     ruta_comun: Optional[str] = None, muestra_existente: bool = True) -> Tuple[bool, Optional[str]]:
     """
     Descarga un archivo, muestra una barra de progreso y el tamaño del archivo
 
@@ -532,6 +617,7 @@ def descargar_archivo(url: str, auto_unzip: bool = False, ruta_unzip: Optional[s
         ruta_unzip: Ruta donde descomprimir (requerido si auto_unzip=True)
         ruta_destino: Ruta específica donde guardar
         ultima_version: Número de versión para mapeo de carpetas
+        muestra_existente: Si avisa que se usa un archivo descargado previamente
 
     Returns:
         Tuple of (success, ruta_archivo)
@@ -550,21 +636,21 @@ def descargar_archivo(url: str, auto_unzip: bool = False, ruta_unzip: Optional[s
 
         # Chequea si el archivo existe
         if os.path.exists(ruta_archivo):
-            return _manejar_archivo_existente(ruta_archivo, auto_unzip, ruta_unzip)
+            return _manejar_archivo_existente(ruta_archivo, auto_unzip, ruta_unzip, ruta_comun, muestra_existente)
 
         # Descarga el archivo
-        return _descargar_archivo_nuevo(url, ruta_archivo, carpeta_base, auto_unzip, ruta_unzip)
+        return _descargar_archivo_nuevo(url, ruta_archivo, carpeta_base, auto_unzip, ruta_unzip, ruta_comun)
 
     except requests.exceptions.RequestException as e:
-        muestra_contenido(f"{Fore.LIGHTRED_EX}{TEXTOS['error_descarga']}. Error: {e}\n")
+        muestra_contenido(f"\n{Fore.LIGHTRED_EX}{TEXTOS['error_descarga']}. Error: {e}\n")
         return False, None
 
     except IOError as e:
-        muestra_contenido(f"{Fore.LIGHTRED_EX}{TEXTOS['error_guardar_archivo']}. Error: {e}\n")
+        muestra_contenido(f"\n{Fore.LIGHTRED_EX}{TEXTOS['error_guardar_archivo']}. Error: {e}\n")
         return False, None
 
     except Exception as e:
-        muestra_contenido(f"{Fore.LIGHTRED_EX}{TEXTOS['error_inesperado']} {e}\n")
+        muestra_contenido(f"\n{Fore.LIGHTRED_EX}{TEXTOS['error_inesperado']} {e}\n")
         return False, None
 
 def _construir_ruta_descarga(url: str, carpeta_simi: str, ultima_version: Optional[str]) -> Tuple[str, str]:
@@ -596,24 +682,58 @@ def _construir_ruta_descarga(url: str, carpeta_simi: str, ultima_version: Option
     ruta_archivo = os.path.join(carpeta_base, filename)
     return ruta_archivo, carpeta_base
 
-def _manejar_archivo_existente(ruta_archivo: str, auto_unzip: bool, ruta_unzip: Optional[str]) -> Tuple[bool, Optional[str]]:
+def _descomprime_descarga(ruta_archivo: str, auto_unzip: bool, ruta_unzip: Optional[str], ruta_comun: Optional[str]) -> bool:
+    """ Helper para descomprimir lo descargado si corresponde """
+    if not (auto_unzip and ruta_archivo.lower().endswith('.zip')):
+        return True
+
+    if ruta_unzip is None:
+        muestra_contenido(f"{Fore.LIGHTRED_EX}{TEXTOS['zip_parametro_requerido']}\n")
+        return False
+
+    if not descomprime_zip(ruta_archivo, ruta_unzip, elimina_zip=False, ruta_comun=ruta_comun):
+        muestra_contenido(f"{Fore.LIGHTRED_EX}{TEXTOS['descarga_no_descomprime']}\n")
+        return False
+
+    return True
+
+def _agrega_comentario_zip(ruta_zip: str, comentario: bytes) -> None:
+    """
+    Agrega un comentario dentro del zip modificando solo el final del archivo (End of Central Directory),
+    sin reescribir el resto del zip
+    """
+    import struct
+
+    with open(ruta_zip, 'r+b') as f:
+        f.seek(0, os.SEEK_END)
+        tamanio = f.tell()
+
+        # El registro EOCD (22 bytes + comentario de hasta 65535 bytes) está al final del archivo
+        leido = min(tamanio, 22 + 65535)
+        f.seek(tamanio - leido)
+        posicion = f.read().rfind(b'PK\x05\x06')
+        if posicion == -1:
+            raise ValueError(f"No se encontró el final del zip: {ruta_zip}")
+
+        # El largo del comentario está 20 bytes después del inicio del registro
+        f.seek(tamanio - leido + posicion + 20)
+        f.write(struct.pack('<H', len(comentario)) + comentario)
+        f.truncate() # Descarta un comentario anterior, si había
+
+def _manejar_archivo_existente(ruta_archivo: str, auto_unzip: bool, ruta_unzip: Optional[str],
+                               ruta_comun: Optional[str], muestra_existente: bool) -> Tuple[bool, Optional[str]]:
     """ Helper para manejar archivos existentes """
-    muestra_contenido(f"{Fore.LIGHTCYAN_EX}{TEXTOS['archivo_existente']}\n[{ruta_archivo}]")
+    if muestra_existente:
+        muestra_contenido(f"{Fore.LIGHTCYAN_EX}{TEXTOS['archivo_existente']}\n[{ruta_archivo}]")
 
-    if auto_unzip and ruta_archivo.lower().endswith('.zip'):
-        if ruta_unzip is None:
-            muestra_contenido(f"{Fore.LIGHTRED_EX}{TEXTOS['zip_parametro_requerido']}\n")
-            return False, None
-
-        descomp_exitosa = descomprime_zip(ruta_archivo, ruta_unzip, elimina_zip=False)
-        if not descomp_exitosa:
-            muestra_contenido(f"{Fore.LIGHTRED_EX}{TEXTOS['descarga_no_descomprime']}\n")
-            return False, None
+    if not _descomprime_descarga(ruta_archivo, auto_unzip, ruta_unzip, ruta_comun):
+        return False, None
 
     return True, ruta_archivo
 
 def _descargar_archivo_nuevo(url: str, ruta_archivo: str, carpeta_base: str,
-                             auto_unzip: bool, ruta_unzip: Optional[str]) -> Tuple[bool, Optional[str]]:
+                             auto_unzip: bool, ruta_unzip: Optional[str],
+                             ruta_comun: Optional[str]) -> Tuple[bool, Optional[str]]:
     """ Helper para descargar archivo nuevo """
     import requests
 
@@ -648,15 +768,10 @@ def _descargar_archivo_nuevo(url: str, ruta_archivo: str, carpeta_base: str,
 
         muestra_contenido(f"{Fore.LIGHTGREEN_EX}{TEXTOS['descarga_exitosa']}\n[{ruta_archivo}]")
 
-    # Descomprime zip si es necesario
-    if auto_unzip and ruta_archivo.lower().endswith('.zip'):
-        if ruta_unzip is None:
-            muestra_contenido(f"{Fore.LIGHTRED_EX}{TEXTOS['zip_parametro_requerido']}\n")
-            return False, None
+    if ruta_archivo.lower().endswith('.zip'): # Descarga de GitHub = fallback
+        _agrega_comentario_zip(ruta_archivo, COMENTARIO_ZIP_FALLBACK)
 
-        descomp_exitosa = descomprime_zip(ruta_archivo, ruta_unzip, elimina_zip=False)
-        if not descomp_exitosa:
-            muestra_contenido(f"{Fore.LIGHTRED_EX}{TEXTOS['descarga_no_descomprime']}\n")
-            return False, None
+    if not _descomprime_descarga(ruta_archivo, auto_unzip, ruta_unzip, ruta_comun):
+        return False, None
 
     return True, ruta_archivo
