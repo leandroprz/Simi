@@ -1,5 +1,11 @@
 # Changelog - Simi
 
+## 3.1
+- Support for Adobe 2027 versions
+- Fixed an issue that was showing the app as damaged on macOS
+- Fixed an issue that prevented Simi from getting language packs from official sources
+- Improved InDesign and InCopy language packs for every version
+
 ## 3.0
 - Improved how Simi gets language packs for: InDesign, InCopy, Photoshop, Illustrator and Animate
 
