@@ -20,10 +20,16 @@ def get_fore():
     from colorama import Fore
     return Fore
 
+# Años de Adobe que se muestran en el menú, del más nuevo al más viejo (2027-2018)
+ANIOS_ADOBE = range(2027, 2017, -1)
+
+def _linea_menu(numero, texto):
+    """ Helper para alinear las opciones del menú con 1 y 2 dígitos """
+    etiqueta = f"[{numero}]"
+    return f"{etiqueta:>4} {texto}\n"
+
 def pantalla_splash():
-    """
-    Muestra mensaje sobre uso de las locales en Simi
-    """
+    """ Muestra mensaje sobre uso de las locales en Simi """
     # Detecta idioma antes de mostrar la interfaz
     shared_state.idioma_simi = inicializar_idioma()
 
@@ -154,6 +160,15 @@ def menu_secundario(modo='cambiar'):
     Args:
         modo: 'cambiar' para cambiar idioma, 'restaurar' para restaurar desde backup
     """
+    # Mapeo de números a años y opciones de navegación (van después de los años)
+    opciones_anio = {str(n): anio for n, anio in enumerate(ANIOS_ADOBE, 1)}
+    opcion_principal = len(opciones_anio) + 1
+    opcion_ayuda = opcion_principal + 1
+    opcion_reportar = opcion_principal + 2
+    opcion_salir = opcion_principal + 3
+
+    menu_anios = "".join(_linea_menu(n, f"Adobe {anio}") for n, anio in enumerate(ANIOS_ADOBE, 1))
+
     while True:
         if modo == 'cambiar':
             titulo_menu = titulo_subrayado(f"{TEXTOS['cambiar_programas']} {shared_state.idioma_menu_ui}")
@@ -165,42 +180,29 @@ def menu_secundario(modo='cambiar'):
         muestra_contenido(
             f"\n{TEXTOS['simi_descripcion']}\n\n"
             f"\n{titulo_menu}\n\n"
-            " [1] Adobe 2026\n"
-            " [2] Adobe 2025\n"
-            " [3] Adobe 2024\n"
-            " [4] Adobe 2023\n"
-            " [5] Adobe 2022\n"
-            " [6] Adobe 2021\n"
-            " [7] Adobe 2020\n"
-            " [8] Adobe 2019\n"
-            " [9] Adobe 2018\n"
-            f"[10] {TEXTOS['menu_principal']}\n"
-            f"[11] {TEXTOS['menu_ayuda']}\n"
-            f"[12] {TEXTOS['menu_reportar_error']}\n"
-            f"[13] {TEXTOS['menu_salir']}\n"
+            f"{menu_anios}"
+            f"{_linea_menu(opcion_principal, TEXTOS['menu_principal'])}"
+            f"{_linea_menu(opcion_ayuda, TEXTOS['menu_ayuda'])}"
+            f"{_linea_menu(opcion_reportar, TEXTOS['menu_reportar_error'])}"
+            f"{_linea_menu(opcion_salir, TEXTOS['menu_salir'])}"
         )
         borde_inferior()
 
         seleccion = muestra_input_usuario().strip()
 
-        if seleccion in ['1', '2', '3', '4', '5', '6', '7', '8', '9']:
-            # Mapeo de selección a año
-            version_map = {
-                '1': 2026, '2': 2025, '3': 2024, '4': 2023, '5': 2022,
-                '6': 2021, '7': 2020, '8': 2019, '9': 2018
-            }
-            shared_state.version_adobe = version_map[seleccion]
+        if seleccion in opciones_anio:
+            shared_state.version_adobe = opciones_anio[seleccion]
             menu_terciario(modo)
-        elif seleccion == '10':
+        elif seleccion == str(opcion_principal):
             menu_principal()
             return
-        elif seleccion == '11':
+        elif seleccion == str(opcion_ayuda):
             from utils_app import abre_url_ayuda
             abre_url_ayuda()
-        elif seleccion == '12':
+        elif seleccion == str(opcion_reportar):
             from utils_app import abre_url_reportar_error
             abre_url_reportar_error()
-        elif seleccion == '13':
+        elif seleccion == str(opcion_salir):
             from utils_app import cierra_programa
             cierra_programa()
         else:
@@ -226,7 +228,8 @@ def menu_terciario(modo='cambiar'):
 
     # Reglas de disponibilidad por programa
     REGLAS_DISPONIBILIDAD = {
-        'animate': lambda v: v in range(2018, 2025) # Sólo versiones 2018-2024
+        'animate': lambda v: v not in (2025, 2026), # Sin 2025/2026
+        'character_animator': lambda v: v < 2027 # Sin versión 2027 por ahora
     }
 
     while True:
