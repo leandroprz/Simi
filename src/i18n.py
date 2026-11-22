@@ -92,6 +92,7 @@ _TEXTOS_ES = {
     'error_inesperado': 'Error inesperado:',
     'restauro_correctamente_1': 'El idioma se restauró correctamente al',
     'restauro_correctamente_2': 'usando la copia de seguridad en la ruta:',
+    'restauro_correctamente_sin_idioma': 'El idioma se restauró correctamente usando la copia de seguridad en la ruta:',
     'restaura_ps': 'Podés volver al idioma anterior desde Photoshop, ingresando al menú Editar > Preferencias > Interfaz > Idioma de la interfaz.\nReiniciá Photoshop para ver los cambios.',
 
     # Conectividad y descarga
@@ -223,6 +224,7 @@ _TEXTOS_EN = {
     'error_inesperado': 'Unexpected error:',
     'restauro_correctamente_1': 'The language was successfully restored to',
     'restauro_correctamente_2': 'using the backup at the path:',
+    'restauro_correctamente_sin_idioma': 'The language was successfully restored using the backup at the path:',
     'restaura_ps': 'You can revert to the previous language from Photoshop by going to Edit > Preferences > Interface > UI Language.\nRestart Photoshop to see the changes.',
 
     # Connectivity and download
